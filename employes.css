@@ -1,0 +1,147 @@
+body {
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(135deg, #1a1a1a, #2e2e2e, #3c3c3c);
+  color: #f2f2f2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 100vh;
+  padding: 30px;
+  text-align: center;
+  animation: fadeIn 0.8s ease;
+}
+
+/* === BARRE SUPÉRIEURE === */
+.top-bar {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+#retour {
+  background: #ff1e1e;
+  color: #fff;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(255, 30, 30, 0.3);
+}
+
+#retour:hover {
+  transform: translateX(-3px) scale(1.05);
+  filter: brightness(1.2);
+}
+
+/* === TITRE === */
+h1 {
+  color: #ff1e1e;
+  font-size: 1.8em;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  animation: slideDown 0.6s ease;
+}
+
+/* === FORMULAIRE === */
+.form {
+  background: rgba(255, 255, 255, 0.07);
+  padding: 30px;
+  border-radius: 12px;
+  width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+}
+
+input, select, button {
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1em;
+}
+
+button {
+  background: linear-gradient(135deg, #ff1e1e, #b60000);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+button:hover {
+  transform: scale(1.05);
+  filter: brightness(1.15);
+}
+
+/* === PLANNING === */
+.planning-container {
+  margin-top: 40px;
+  background: rgba(255, 255, 255, 0.07);
+  padding: 25px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 900px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+  animation: fadeIn 1s ease;
+}
+
+.planning-container h3 {
+  text-align: center;
+  width: 100%;
+  font-weight: 600;
+  color: #f2f2f2;
+  margin-bottom: 10px;
+}
+
+/* === TABLEAU === */
+table {
+  border-collapse: collapse;
+  margin-top: 15px;
+  margin-left: auto;
+  margin-right: auto; /* ✅ centre le tableau */
+}
+
+th, td {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 10px 20px;
+  text-align: center;
+  min-width: 130px; /* ✅ largeur harmonieuse */
+}
+
+th {
+  background-color: #b60000;
+  color: #fff;
+  font-weight: 600;
+}
+
+td {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+td.checked {
+  background-color: rgba(0, 180, 0, 0.6);
+  font-weight: 600;
+  color: #fff;
+  border-color: rgba(0, 255, 0, 0.4);
+  transition: background 0.3s ease;
+}
+
+/* === ANIMATIONS === */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Planning Employés</title>
+  <link rel="stylesheet" href="employes.css">
+</head>
+<body>
+  <!-- 🔙 BOUTON RETOUR -->
+  <div class="top-bar">
+    <button id="retour">⬅ Retour</button>
+    <h1>👷 Mon planning</h1>
+  </div>
+
+    <div class="container"></div>
+    <label for="metier">Corps d'état :</label>
+    <select id="metier">
+      <option value="">-- Sélectionner --</option>
+      <option value="electricite">Électricité</option>
+      <option value="plomberie">Plomberie</option>
+      <option value="menuiserie">Menuiserie</option>
+      <option value="peinture">Peinture</option>
+      <option value="maconnerie">Maçonnerie</option>
+    </select>
+
+    <label for="employe">Employé :</label>
+    <select id="employe">
+      <option value="">-- Sélectionner --</option>
+    </select>
+
+    <button id="voirPlanning">Voir mon planning</button>
+
+    <div id="planningContainer" class="planning"></div>
+  </div>
+
+  <script src="employes.js"></script>
+</body>
+</html>

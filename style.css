@@ -1,0 +1,101 @@
+/* === STYLE GLOBAL === */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+}
+
+body {
+  height: 100vh;
+  background: linear-gradient(135deg, #1a1a1a, #2e2e2e, #3c3c3c);
+  color: #f2f2f2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* === CONTENEUR PRINCIPAL === */
+.container {
+  text-align: center;
+  background: rgba(255, 255, 255, 0.07);
+  padding: 50px 70px;
+  border-radius: 18px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+  max-width: 400px;
+  width: 90%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* === LOGO === */
+.logo {
+  width: 260px;
+  margin-bottom: 15px;
+}
+
+/* === SOUS-TITRE === */
+.subtitle {
+  font-size: 1.1em;
+  opacity: 0.85;
+  margin-bottom: 40px;
+  color: #e5e5e5;
+}
+
+/* === BOUTONS === */
+.buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.btn {
+  padding: 15px 30px;
+  font-size: 1.2em;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #fff;
+}
+
+/* Rouge Segond vif */
+.btn-employes {
+  background: linear-gradient(135deg, #ff1e1e, #b60000);
+  box-shadow: 0 4px 15px rgba(255, 30, 30, 0);
+}
+
+/* Gris clair contrasté pour cadres */
+.btn-cadres {
+  background: linear-gradient(135deg, #5a5a5a, #2c2c2c);
+  box-shadow: 0 4px 10px rgba(255, 255, 255, 0.);
+}
+
+.btn:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+}
+
+/* === PIED DE PAGE === */
+footer {
+  margin-top: 40px;
+  font-size: 0.9em;
+  opacity: 0.8;
+  color: #cfcfcf;
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 480px) {
+  .container {
+    padding: 40px 30px;
+  }
+
+  .logo {
+    width: 200px;
+  }
+
+  .btn {
+    font-size: 1em;
+  }
+}

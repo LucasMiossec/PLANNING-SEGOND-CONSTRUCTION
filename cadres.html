@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Planning - Cadres</title>
+  <link rel="stylesheet" href="cadres.css">
+</head>
+<body>
+  <div class="top-bar">
+    <button id="retour">⬅ Retour</button>
+    <h1>📅 Planning des cadres</h1>
+  </div>
+
+  <div class="form">
+    <label>Date :</label>
+    <input type="date" id="date">
+
+    <label>Corps d'état :</label>
+    <select id="metier">
+      <option value="electricite">Électricité</option>
+      <option value="plomberie">Plomberie</option>
+      <option value="menuiserie">Menuiserie</option>
+      <option value="peinture">Peinture</option>
+      <option value="maconnerie">Maçonnerie</option>
+    </select>
+
+    <label>Employé :</label>
+    <select id="employe">
+      <option value="">-- Sélectionner un employé --</option>
+    </select>
+    <div class="ajout-chantier">
+      <input type="text" id="nouvelEmploye" placeholder="Ajouter un employé">
+      <button id="ajouterEmploye">➕</button>
+      <button id="supprimerEmploye">🗑️</button>
+    </div>
+
+    <label>Chantier :</label>
+    <select id="chantier">
+      <option value="">-- Sélectionner un chantier --</option>
+    </select>
+    <div class="ajout-chantier">
+      <input type="text" id="nouveauChantier" placeholder="Ajouter un chantier">
+      <button id="ajouterChantier">➕</button>
+      <button id="supprimerChantier">🗑️</button>
+    </div>
+
+    <button id="ajouter">✅ Ajouter au planning</button>
+  </div>
+
+  <div class="planning-container">
+    <h3>📊 Tableau de planification (Demain)</h3>
+    <div id="planningTable"></div>
+  </div>
+
+  <script src="cadres.js"></script>
+</body>
+</html>
