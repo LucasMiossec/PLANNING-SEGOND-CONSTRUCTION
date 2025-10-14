@@ -1,52 +1,77 @@
+/* === STYLE GLOBAL === */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", "Segoe UI", sans-serif;
+}
+
 body {
-  font-family: 'Poppins', sans-serif;
-  background: linear-gradient(135deg, #1a1a1a, #2e2e2e, #3c3c3c);
+  background: linear-gradient(145deg, #1a1a1a, #2e2e2e, #3c3c3c);
   color: #f2f2f2;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
   min-height: 100vh;
-  padding: 30px;
+  padding: 30px 20px;
   text-align: center;
+  animation: fadeIn 0.8s ease-in-out;
 }
 
+/* === BARRE SUPÉRIEURE === */
 .top-bar {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 15px;
-  margin-bottom: 20px;
+  margin-bottom: 25px;
 }
 
 #retour {
-  background: #ff1e1e;
+  background: linear-gradient(135deg, #ff2b2b, #b60000);
   color: #fff;
   font-weight: 600;
   border: none;
-  border-radius: 8px;
-  padding: 10px 15px;
+  border-radius: 10px;
+  padding: 10px 18px;
   cursor: pointer;
-  transition: 0.3s;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(255, 30, 30, 0.3);
 }
 
 #retour:hover {
-  filter: brightness(1.2);
+  transform: translateX(-3px) scale(1.05);
+  filter: brightness(1.15);
 }
 
+/* === TITRE === */
 h1 {
   color: #ff1e1e;
+  font-size: 1.9em;
+  font-weight: 700;
+  text-shadow: 0 0 10px rgba(255, 30, 30, 0.4);
+  margin-bottom: 10px;
 }
 
 /* === FORMULAIRE === */
 .form {
   background: rgba(255, 255, 255, 0.07);
   padding: 30px;
-  border-radius: 12px;
-  width: 360px;
+  border-radius: 14px;
+  width: 380px;
   display: flex;
   flex-direction: column;
   gap: 15px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+  margin-bottom: 40px;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+label {
+  text-align: left;
+  font-weight: 500;
+  color: #ddd;
 }
 
 input, select, button {
@@ -54,6 +79,14 @@ input, select, button {
   border: none;
   border-radius: 8px;
   font-size: 1em;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  transition: all 0.3s ease;
+}
+
+select:focus, input:focus {
+  outline: 2px solid #ff1e1e;
+  background: rgba(255, 255, 255, 0.15);
 }
 
 button {
@@ -62,6 +95,8 @@ button {
   font-weight: 600;
   cursor: pointer;
   transition: 0.3s;
+  letter-spacing: 0.4px;
+  box-shadow: 0 4px 15px rgba(255, 30, 30, 0.3);
 }
 
 button:hover {
@@ -79,19 +114,21 @@ button:hover {
   flex: 1;
 }
 
-/* === PLANNING === */
+/* === PLANNING CONTAINER === */
 .planning-container {
-  margin-top: 40px;
+  margin-top: 30px;
   background: rgba(255, 255, 255, 0.07);
   padding: 25px;
-  border-radius: 12px;
-  width: 90%;
-  max-width: 900px;
+  border-radius: 14px;
+  width: min(1200px, 96%);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .planning-container h3 {
@@ -99,38 +136,114 @@ button:hover {
   width: 100%;
   font-weight: 600;
   color: #f2f2f2;
-  margin-bottom: 10px;
+  margin-bottom: 15px;
+  font-size: 1.3em;
 }
 
 /* === TABLEAU === */
-table {
+.planning-container table {
+  width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
-  margin-top: 15px;
-  margin-left: auto;
-  margin-right: auto; /* ✅ centre le tableau */
+  background: rgba(255,255,255,0.03);
+  min-width: 700px;
 }
 
-th, td {
+/* Colonnes stables et lisibles */
+.planning-container th,
+.planning-container td {
+  width: 20%;
+  padding: 12px 14px;
+  text-align: left;
+  vertical-align: top;
   border: 1px solid rgba(255, 255, 255, 0.2);
-  padding: 10px 20px;
-  text-align: center;
-  min-width: 130px; /* ✅ largeur harmonieuse */
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  line-height: 1.35;
 }
 
-th {
+/* En-têtes */
+.planning-container th {
   background-color: #b60000;
   color: #fff;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  text-align: center;
 }
 
-td {
+/* Cellules normales */
+.planning-container td {
   background-color: rgba(255, 255, 255, 0.05);
+  color: #f0f0f0;
 }
 
-td.checked {
-  background-color: rgba(0, 180, 0, 0.6);
-  font-weight: 600;
+/* Cellules cochées (affectées) */
+.planning-container td.checked {
+  background: linear-gradient(135deg, #1ea833, #148c29);
+  font-weight: 700;
   color: #fff;
-  border-color: rgba(0, 255, 0, 0.4);
-  transition: background 0.3s ease;
+  border-color: rgba(0,255,0,0.35);
+  box-shadow: inset 0 0 8px rgba(0,0,0,0.2);
+}
+
+/* === ANIMATIONS === */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 900px) {
+  h1 {
+    font-size: 1.5em;
+  }
+
+  .form {
+    width: 100%;
+    padding: 25px;
+    box-shadow: none;
+  }
+
+  .planning-container {
+    padding: 18px;
+  }
+
+  .planning-container th,
+  .planning-container td {
+    font-size: 0.9em;
+    padding: 10px 12px;
+  }
+
+  table {
+    min-width: 600px;
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  #retour {
+    padding: 8px 12px;
+    font-size: 0.9em;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    padding: 20px 10px;
+  }
+
+  h1 {
+    font-size: 1.3em;
+  }
+
+  .form {
+    padding: 20px;
+  }
+
+  .planning-container th,
+  .planning-container td {
+    font-size: 0.85em;
+  }
 }
