@@ -93,6 +93,7 @@ ajouterEmployeBtn.addEventListener("click", async () => {
     await set(ref(db, `employes/${metier}`), employesParMetier[metier]);
     localStorage.setItem("employesSegond", JSON.stringify(employesParMetier));
     nouvelEmployeInput.value = "";
+    chargerEmployesPourMetier(); // ✅ mise à jour immédiate
     setTimeout(() => majLocale = false, 1000);
   } catch (e) {
     console.error("❌ Échec ajout employé Firebase :", e);
@@ -110,6 +111,7 @@ supprimerEmployeBtn.addEventListener("click", async () => {
     majLocale = true;
     await set(ref(db, `employes/${metier}`), employesParMetier[metier]);
     localStorage.setItem("employesSegond", JSON.stringify(employesParMetier));
+    chargerEmployesPourMetier(); // ✅ mise à jour immédiate
     setTimeout(() => majLocale = false, 1000);
   } catch (e) {
     console.error("❌ Échec suppression employé Firebase :", e);
@@ -128,6 +130,7 @@ ajouterChantierBtn.addEventListener("click", async () => {
     await set(ref(db, "chantiers"), chantiersDisponibles);
     localStorage.setItem("chantiersSegond", JSON.stringify(chantiersDisponibles));
     nouveauChantierInput.value = "";
+    chargerChantiers(); // ✅ mise à jour immédiate
     setTimeout(() => majLocale = false, 1000);
   } catch (e) {
     console.error("❌ Échec ajout chantier Firebase :", e);
@@ -143,6 +146,7 @@ supprimerChantierBtn.addEventListener("click", async () => {
     majLocale = true;
     await set(ref(db, "chantiers"), chantiersDisponibles);
     localStorage.setItem("chantiersSegond", JSON.stringify(chantiersDisponibles));
+    chargerChantiers(); // ✅ mise à jour immédiate
     setTimeout(() => majLocale = false, 1000);
   } catch (e) {
     console.error("❌ Échec suppression chantier Firebase :", e);
@@ -214,7 +218,6 @@ function genererTableauPlanning() {
   table.appendChild(tbody);
   planningTable.appendChild(table);
 
-  // ✨ Animation visuelle de mise à jour
   planningTable.style.transition = "background 0.3s";
   planningTable.style.background = "rgba(255, 30, 30, 0.2)";
   setTimeout(() => (planningTable.style.background = "transparent"), 400);
