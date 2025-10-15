@@ -6,19 +6,17 @@
   font-family: 'Poppins', sans-serif;
 }
 
-/* === FOND ANIMÉ DOUX === */
+/* === FOND ANIMÉ CLAIR (fixé et compatible en ligne) === */
 body {
   height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  color: #f0f0f0;
-  background: linear-gradient(-45deg, #e5e5e5, #d8d8d8, #b60000, #ffffff);
+  color: #1a1a1a;
+  background: linear-gradient(-45deg, #f3f3f3, #e5e5e5, #d8d8d8, #b60000, #ffffff);
   background-size: 400% 400%;
   animation: gradientShift 12s ease infinite;
-
-
-
+  background-attachment: fixed; /* ✅ garde la même position sur GitHub */
 }
 
 @keyframes gradientShift {
@@ -30,7 +28,7 @@ body {
 /* === CONTENEUR PRINCIPAL === */
 .container {
   text-align: center;
-  background: rgba(20, 20, 20, 0.7);
+  background: rgba(0, 0, 0, 0.7);
   padding: 50px 70px;
   border-radius: 18px;
   backdrop-filter: blur(10px);
@@ -57,9 +55,9 @@ body {
 /* === SOUS-TITRE === */
 .subtitle {
   font-size: 1.1em;
-  opacity: 0.85;
+  opacity: 0.9;
   margin-bottom: 40px;
-  color: #dcdcdc;
+  color: #f2f2f2;
   letter-spacing: 0.5px;
 }
 
@@ -95,7 +93,7 @@ body {
   background: linear-gradient(
     120deg,
     transparent,
-    rgba(255, 255, 255, 0.2),
+    rgba(255, 255, 255, 0.25),
     transparent
   );
   transition: 0.6s;
@@ -105,24 +103,24 @@ body {
   left: 100%;
 }
 
-/* Rouge Segond adouci */
+/* Rouge Segond */
 .btn-employes {
-  background: linear-gradient(135deg, #992020, #661111);
-  box-shadow: 0 0 15px rgba(153, 32, 32, 0.3);
+  background: linear-gradient(135deg, #ff1e1e, #b60000);
+  box-shadow: 0 0 15px rgba(255, 30, 30, 0.3);
 }
 
 .btn-employes:hover {
-  box-shadow: 0 0 20px rgba(255, 60, 60, 0.4);
+  box-shadow: 0 0 25px rgba(255, 60, 60, 0.5);
 }
 
 /* Gris métal doux */
 .btn-cadres {
-  background: linear-gradient(135deg, #555, #2c2c2c);
-  box-shadow: 0 0 12px rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, #666, #2c2c2c);
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.15);
 }
 
 .btn-cadres:hover {
-  box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.25);
 }
 
 .btn:hover {
@@ -134,7 +132,7 @@ footer {
   margin-top: 40px;
   font-size: 0.9em;
   opacity: 0.8;
-  color: #bdbdbd;
+  color: #ccc;
   letter-spacing: 0.3px;
 }
 
