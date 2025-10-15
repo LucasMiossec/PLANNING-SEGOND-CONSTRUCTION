@@ -6,32 +6,53 @@
   font-family: 'Poppins', sans-serif;
 }
 
+/* === FOND ANIMÉ DOUX === */
 body {
   height: 100vh;
-  background: linear-gradient(135deg, #1a1a1a, #2e2e2e, #3c3c3c);
-  color: #f2f2f2;
   display: flex;
   justify-content: center;
   align-items: center;
+  color: #f0f0f0;
+  background: linear-gradient(-45deg, #1d1d1d, #2a2a2a, #7a1b1b, #3b3b3b);
+  background: linear-gradient(-45deg, #e5e5e5, #d8d8d8, #b60000, #ffffff);
+  background-size: 400% 400%;
+  animation: gradientShift 12s ease infinite;
+
+
+
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 /* === CONTENEUR PRINCIPAL === */
 .container {
   text-align: center;
-  background: rgba(255, 255, 255, 0.07);
+  background: rgba(20, 20, 20, 0.7);
   padding: 50px 70px;
   border-radius: 18px;
   backdrop-filter: blur(10px);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
-  max-width: 400px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+  max-width: 420px;
   width: 90%;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 1;
+  transition: all 0.4s ease;
+}
+
+.container:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 0 35px rgba(255, 60, 60, 0.3);
 }
 
 /* === LOGO === */
 .logo {
-  width: 260px;
-  margin-bottom: 15px;
+  width: 250px;
+  margin-bottom: 20px;
+  filter: drop-shadow(0 0 6px rgba(255, 60, 60, 0.3));
 }
 
 /* === SOUS-TITRE === */
@@ -39,7 +60,8 @@ body {
   font-size: 1.1em;
   opacity: 0.85;
   margin-bottom: 40px;
-  color: #e5e5e5;
+  color: #dcdcdc;
+  letter-spacing: 0.5px;
 }
 
 /* === BOUTONS === */
@@ -51,30 +73,61 @@ body {
 
 .btn {
   padding: 15px 30px;
-  font-size: 1.2em;
+  font-size: 1.1em;
   border: none;
   border-radius: 10px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
   color: #fff;
+  letter-spacing: 0.4px;
+  position: relative;
+  overflow: hidden;
 }
 
-/* Rouge Segond vif */
+/* Effet lumineux au survol */
+.btn::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: 0.6s;
+}
+
+.btn:hover::before {
+  left: 100%;
+}
+
+/* Rouge Segond adouci */
 .btn-employes {
-  background: linear-gradient(135deg, #ff1e1e, #b60000);
-  box-shadow: 0 4px 15px rgba(255, 30, 30, 0);
+  background: linear-gradient(135deg, #992020, #661111);
+  box-shadow: 0 0 15px rgba(153, 32, 32, 0.3);
 }
 
-/* Gris clair contrasté pour cadres */
+.btn-employes:hover {
+  box-shadow: 0 0 20px rgba(255, 60, 60, 0.4);
+}
+
+/* Gris métal doux */
 .btn-cadres {
-  background: linear-gradient(135deg, #5a5a5a, #2c2c2c);
-  box-shadow: 0 4px 10px rgba(255, 255, 255, 0.);
+  background: linear-gradient(135deg, #555, #2c2c2c);
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.1);
+}
+
+.btn-cadres:hover {
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
 }
 
 .btn:hover {
   transform: scale(1.05);
-  filter: brightness(1.2);
 }
 
 /* === PIED DE PAGE === */
@@ -82,7 +135,8 @@ footer {
   margin-top: 40px;
   font-size: 0.9em;
   opacity: 0.8;
-  color: #cfcfcf;
+  color: #bdbdbd;
+  letter-spacing: 0.3px;
 }
 
 /* === RESPONSIVE === */
