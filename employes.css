@@ -1,6 +1,6 @@
 body {
   font-family: 'Poppins', sans-serif;
-  background: linear-gradient(135deg, #1a1a1a, #2e2e2e, #3c3c3c);
+  background: linear-gradient(145deg, #1a1a1a, #2e2e2e, #3c3c3c);
   color: #f2f2f2;
   display: flex;
   flex-direction: column;
@@ -12,7 +12,6 @@ body {
   animation: fadeIn 0.8s ease;
 }
 
-/* === BARRE SUPÉRIEURE === */
 .top-bar {
   display: flex;
   align-items: center;
@@ -37,7 +36,6 @@ body {
   filter: brightness(1.2);
 }
 
-/* === TITRE === */
 h1 {
   color: #ff1e1e;
   font-size: 1.8em;
@@ -46,7 +44,7 @@ h1 {
   animation: slideDown 0.6s ease;
 }
 
-/* === FORMULAIRE === */
+/* FORMULAIRE */
 .form {
   background: rgba(255, 255, 255, 0.07);
   padding: 30px;
@@ -58,6 +56,12 @@ h1 {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
 }
 
+label {
+  text-align: left;
+  font-weight: 500;
+  color: #ddd;
+}
+
 input, select, button {
   padding: 10px;
   border: none;
@@ -65,6 +69,17 @@ input, select, button {
   font-size: 1em;
 }
 
+select {
+  background: #000;
+  color: #fff;
+  border: 1px solid #555;
+}
+select:hover, select:focus {
+  border-color: #ff1e1e;
+  outline: none;
+}
+
+/* BOUTONS */
 button {
   background: linear-gradient(135deg, #ff1e1e, #b60000);
   color: #fff;
@@ -72,13 +87,12 @@ button {
   cursor: pointer;
   transition: all 0.3s ease;
 }
-
 button:hover {
   transform: scale(1.05);
   filter: brightness(1.15);
 }
 
-/* === PLANNING === */
+/* PLANNING */
 .planning-container {
   margin-top: 40px;
   background: rgba(255, 255, 255, 0.07);
@@ -94,42 +108,19 @@ button:hover {
   animation: fadeIn 1s ease;
 }
 
-.planning-container h3 {
-  text-align: center;
-  width: 100%;
-  font-weight: 600;
-  color: #f2f2f2;
-  margin-bottom: 10px;
-}
-
-/* === CONTENEUR DU TABLEAU (défilement horizontal) === */
 .planning {
   width: 100%;
-  overflow-x: auto; /* ✅ scroll horizontal activé */
-  -webkit-overflow-scrolling: touch; /* ✅ défilement fluide sur mobile */
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   scrollbar-color: #b60000 rgba(255, 255, 255, 0.1);
   scrollbar-width: thin;
   border-radius: 8px;
 }
 
-/* style scrollbar (Chrome/Edge/Safari) */
-.planning::-webkit-scrollbar {
-  height: 10px;
-}
-.planning::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
-}
-.planning::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #ff1e1e, #b60000);
-  border-radius: 8px;
-}
-
-/* === TABLEAU === */
 table {
   border-collapse: collapse;
   margin-top: 15px;
-  width: 1200px; /* ✅ largeur réelle du tableau (scrollable) */
+  width: 100%;
   background: rgba(255, 255, 255, 0.03);
 }
 
@@ -137,9 +128,7 @@ th, td {
   border: 1px solid rgba(255, 255, 255, 0.2);
   padding: 12px 18px;
   text-align: center;
-  min-width: 180px; /* ✅ largeurs lisibles */
-  word-break: break-word;
-  white-space: normal;
+  min-width: 160px;
 }
 
 th {
@@ -157,50 +146,20 @@ td.checked {
   background-color: rgba(0, 180, 0, 0.6);
   font-weight: 600;
   color: #fff;
-  border-color: rgba(0, 255, 0, 0.4);
-  transition: background 0.3s ease;
 }
 
-/* === ANIMATIONS === */
+/* ANIMATIONS */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
-
 @keyframes slideDown {
   from { opacity: 0; transform: translateY(-10px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* === RESPONSIVE === */
+/* RESPONSIVE */
 @media (max-width: 768px) {
-  .form {
-    width: 100%;
-  }
-
-  table {
-    width: 900px; /* ✅ réduit un peu la largeur du tableau sur mobile */
-  }
-
-  th, td {
-    min-width: 160px;
-    font-size: 0.9em;
-    padding: 10px 14px;
-  }
-}
-
-@media (max-width: 480px) {
-  table {
-    width: 750px;
-  }
-
-  th, td {
-    min-width: 140px;
-    font-size: 0.85em;
-  }
-
-  #retour {
-    font-size: 0.9em;
-    padding: 8px 12px;
-  }
+  .form { width: 100%; }
+  th, td { font-size: 0.9em; padding: 10px 14px; }
 }

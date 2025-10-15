@@ -77,22 +77,51 @@ label {
   font-weight: 500;
 }
 
+/* === INPUTS & SELECTS === */
 input,
 select,
 button {
   border: none;
   border-radius: 8px;
   padding: 10px 12px;
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
   font-size: 1em;
 }
 
-select:focus,
+/* === MENUS DÉROULANTS NOIRS === */
+select {
+  background: #000; /* ✅ fond noir */
+  color: #fff;
+  border: 1px solid #555;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+select:hover {
+  border-color: #ff1e1e; /* effet rouge au survol */
+}
+
+select:focus {
+  outline: none;
+  border-color: #ff1e1e;
+  box-shadow: 0 0 5px rgba(255, 30, 30, 0.6);
+}
+
+/* fond des options dans la liste déroulante */
+select option {
+  background: #000;
+  color: #fff;
+}
+
+/* === CHAMPS DE TEXTE === */
+input {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
 input:focus {
   outline: 2px solid #ff1e1e;
 }
 
+/* === BOUTONS === */
 button {
   background: linear-gradient(135deg, #ff1e1e, #b60000);
   color: #fff;
@@ -131,14 +160,14 @@ button:hover {
 /* === TABLEAU AVEC DÉFILEMENT === */
 #planningTable {
   width: 100%;
-  overflow-x: auto; /* ✅ Active le scroll horizontal */
-  -webkit-overflow-scrolling: touch; /* ✅ Défilement fluide sur mobile */
+  overflow-x: auto; /* ✅ Scroll horizontal activé */
+  -webkit-overflow-scrolling: touch;
   scrollbar-color: #b60000 rgba(255, 255, 255, 0.1);
   scrollbar-width: thin;
 }
 
 #planningTable::-webkit-scrollbar {
-  height: 10px; /* épaisseur du scroll horizontal */
+  height: 10px;
 }
 
 #planningTable::-webkit-scrollbar-track {
@@ -151,17 +180,18 @@ button:hover {
   border-radius: 8px;
 }
 
+/* === TABLEAU === */
 #planningTable table {
-  width: 1300px; /* ✅ Largeur réelle du tableau */
+  width: 1300px;
   border-collapse: collapse;
   background: rgba(255, 255, 255, 0.03);
-  table-layout: fixed; /* colonnes fixes pour stabilité */
+  table-layout: fixed;
 }
 
 /* === COLONNES === */
 #planningTable th,
 #planningTable td {
-  width: 260px; /* ✅ largeur confortable pour lecture */
+  width: 260px;
   padding: 14px 16px;
   border: 1px solid rgba(255, 255, 255, 0.18);
   text-align: left;
@@ -206,7 +236,7 @@ button:hover {
   }
 
   #planningTable table {
-    width: 1000px; /* ✅ garde une largeur supérieure à l'écran */
+    width: 1000px;
   }
 
   #planningTable th,

@@ -1,3 +1,22 @@
+// === FIREBASE (CDN v11) ===
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getDatabase, ref, get, set, child, onValue } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+
+// === CONFIGURATION FIREBASE ===
+const firebaseConfig = {
+  apiKey: "TA_CLE_API",
+  authDomain: "planning-segond.firebaseapp.com",
+  databaseURL: "https://planning-segond-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "planning-segond",
+  storageBucket: "planning-segond.appspot.com",
+  messagingSenderId: "951519078075",
+  appId: "1:951519078075:web:1152d3023ed737b8afab9e"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// === ÉLÉMENTS DU DOM ===
 const retourBtn = document.getElementById("retour");
 const dateInput = document.getElementById("date");
 const metierInput = document.getElementById("metier");
@@ -5,73 +24,35 @@ const employeSelect = document.getElementById("employe");
 const nouvelEmployeInput = document.getElementById("nouvelEmploye");
 const ajouterEmployeBtn = document.getElementById("ajouterEmploye");
 const supprimerEmployeBtn = document.getElementById("supprimerEmploye");
-
 const chantierSelect = document.getElementById("chantier");
 const nouveauChantierInput = document.getElementById("nouveauChantier");
 const ajouterChantierBtn = document.getElementById("ajouterChantier");
 const supprimerChantierBtn = document.getElementById("supprimerChantier");
 const planningTable = document.getElementById("planningTable");
 
+// === VARIABLES ===
 let planning = {};
 let employesParMetier = {};
 let chantiersDisponibles = [];
+let majLocale = false; // ✅ sert à distinguer les modifs locales des maj Firebase
 
-// === CHARGEMENT SÉCURISÉ DU LOCALSTORAGE ===
-try {
-  planning = JSON.parse(localStorage.getItem("planningSegond")) || {};
-  employesParMetier = JSON.parse(localStorage.getItem("employesSegond")) || {
-    electricite: ["André", "Christopher", "Kevin", "Ali man", "Rachide", "Gabriel"],
-    plomberie: ["Fernando", "Olivier", "Miguel", "Daniel"],
-    menuiserie: ["Rémy"],
-    peinture: ["Cyriaque", "Carlos", "Kévin", "Denis", "Olivier", "Francesco"],
-    maconnerie: ["Rosario", "Gilberto", "Alex", "Jimmy", "Luciano", "Angelo", "Florian", "Simone" ,"Polino"]
-  };
-
-  chantiersDisponibles = JSON.parse(localStorage.getItem("chantiersSegond")) || [];
-} catch (e) {
-  console.warn("⚠️ localStorage bloqué, utilisation de la liste par défaut.");
-  planning = {};
-  employesParMetier = {
-    electricite: ["André", "Christopher", "Kevin", "Ali man", "Rachide", "Gabriel"], 
-    plomberie: ["Fernando", "Olivier", "Miguel", "Daniel"],
-    menuiserie: ["Rémy"],
-    peinture: ["Cyriaque", "Carlos", "Kévin", "Denis", "Olivier", "Francesco"],
-    maconnerie: ["Rosario", "Gilberto", "Alex", "Jimmy", "Luciano", "Angelo", "Florian", "Simone"]
-  };
-  chantiersDisponibles = [];
-}
-
-// === SI PAS DE CHANTIERS ENREGISTRÉS, ON RECRÉE TA LISTE ===
-if (!Array.isArray(chantiersDisponibles) || chantiersDisponibles.length === 0) {
-  chantiersDisponibles = [
-    "AF 25/0346 - SEBASTIEN SEGOND OASIS",
-    "AF 25/0331 - ECOLE ST CHARLES",
-    "AF 24/0276 - VILLA PAOLA",
-    "AF 25/0435 - LES CAROUBIERS",
-    "AF 25/0424 - CREALTYS SUN PALACE",
-    "AF 25/0471 - SUN PALACE",
-    "AF 25/0481 - ESCORIAL 1309 - LOT PLOMBERIE",
-    "AF 25/0438 - MMM ALDEA SEGOND - BEAU RIVAGE",
-    "AF 25/0472 - SIIO - DOCTEUR SCHAU",
-    "AF 25/0291 - IUM",
-    "DEPANNAGE",
-    "AF 25/0677 - ESCORIAL APP 1901 - LOT ELEC",
-    "AF25/0610 - SMBP BUDGET TRESOR -2025-1365/S",
-    "SAPPA ANTIBES",
-    "AF 25/0684 - MME GAZIN",
-    "AF 26/0680 - CSM",
-    "AF 25/0668 - ESCORIAL APP 1302 - LOT ELEC",
-    "AF25/0681 - ESCORIAL APP 414 - LOT ELEC"
-  ];
-
+// === CHARGEMENT INITIAL ===
+async function chargerDepuisFirebase() {
   try {
-    localStorage.setItem("chantiersSegond", JSON.stringify(chantiersDisponibles));
-    console.log("✅ Liste de chantiers recréée et sauvegardée !");
-  } catch (err) {
-    console.warn("⚠️ Impossible d’enregistrer les chantiers :", err);
+    const dbRef = ref(db);
+    const snapEmp = await get(child(dbRef, "employes"));
+    employesParMetier = snapEmp.exists() ? snapEmp.val() : {};
+
+    const snapCh = await get(child(dbRef, "chantiers"));
+    chantiersDisponibles = snapCh.exists() ? snapCh.val() : [];
+
+    const snapPl = await get(child(dbRef, "planning"));
+    planning = snapPl.exists() ? snapPl.val() : {};
+
+  } catch (e) {
+    console.warn("⚠️ Erreur lecture Firebase :", e);
   }
 }
-
 
 // === FONCTIONS UTILITAIRES ===
 function chargerListe(select, data) {
@@ -96,54 +77,85 @@ function chargerChantiers() {
 metierInput.addEventListener("change", chargerEmployesPourMetier);
 
 // === AJOUT EMPLOYÉ ===
-ajouterEmployeBtn.addEventListener("click", () => {
+ajouterEmployeBtn.addEventListener("click", async () => {
   const metier = metierInput.value;
-  const nom = nouvelEmployeInput.value.trim();
+  const nom = (nouvelEmployeInput.value || "").trim();
+
+  if (!metier) return alert("Choisis d'abord un corps d’état.");
   if (!nom) return alert("Entre un nom d'employé !");
   if (!employesParMetier[metier]) employesParMetier[metier] = [];
   if (employesParMetier[metier].includes(nom)) return alert("Cet employé existe déjà !");
+
   employesParMetier[metier].push(nom);
-  localStorage.setItem("employesSegond", JSON.stringify(employesParMetier));
-  chargerEmployesPourMetier();
-  nouvelEmployeInput.value = "";
+
+  try {
+    majLocale = true;
+    await set(ref(db, `employes/${metier}`), employesParMetier[metier]);
+    localStorage.setItem("employesSegond", JSON.stringify(employesParMetier));
+    nouvelEmployeInput.value = "";
+    setTimeout(() => majLocale = false, 1000);
+  } catch (e) {
+    console.error("❌ Échec ajout employé Firebase :", e);
+  }
 });
 
 // === SUPPRESSION EMPLOYÉ ===
-supprimerEmployeBtn.addEventListener("click", () => {
+supprimerEmployeBtn.addEventListener("click", async () => {
   const metier = metierInput.value;
   const nom = employeSelect.value;
   if (!nom) return alert("Sélectionne un employé à supprimer !");
   employesParMetier[metier] = employesParMetier[metier].filter(e => e !== nom);
-  localStorage.setItem("employesSegond", JSON.stringify(employesParMetier));
-  chargerEmployesPourMetier();
+
+  try {
+    majLocale = true;
+    await set(ref(db, `employes/${metier}`), employesParMetier[metier]);
+    localStorage.setItem("employesSegond", JSON.stringify(employesParMetier));
+    setTimeout(() => majLocale = false, 1000);
+  } catch (e) {
+    console.error("❌ Échec suppression employé Firebase :", e);
+  }
 });
 
 // === AJOUT / SUPPRESSION CHANTIER ===
-ajouterChantierBtn.addEventListener("click", () => {
-  const nom = nouveauChantierInput.value.trim();
+ajouterChantierBtn.addEventListener("click", async () => {
+  const nom = (nouveauChantierInput.value || "").trim();
   if (!nom) return alert("Entre un nom de chantier !");
   if (chantiersDisponibles.includes(nom)) return alert("Ce chantier existe déjà !");
   chantiersDisponibles.push(nom);
-  localStorage.setItem("chantiersSegond", JSON.stringify(chantiersDisponibles));
-  chargerChantiers();
-  nouveauChantierInput.value = "";
+
+  try {
+    majLocale = true;
+    await set(ref(db, "chantiers"), chantiersDisponibles);
+    localStorage.setItem("chantiersSegond", JSON.stringify(chantiersDisponibles));
+    nouveauChantierInput.value = "";
+    setTimeout(() => majLocale = false, 1000);
+  } catch (e) {
+    console.error("❌ Échec ajout chantier Firebase :", e);
+  }
 });
 
-supprimerChantierBtn.addEventListener("click", () => {
+supprimerChantierBtn.addEventListener("click", async () => {
   const nom = chantierSelect.value;
   if (!nom) return alert("Sélectionne un chantier à supprimer !");
   chantiersDisponibles = chantiersDisponibles.filter(c => c !== nom);
-  localStorage.setItem("chantiersSegond", JSON.stringify(chantiersDisponibles));
-  chargerChantiers();
+
+  try {
+    majLocale = true;
+    await set(ref(db, "chantiers"), chantiersDisponibles);
+    localStorage.setItem("chantiersSegond", JSON.stringify(chantiersDisponibles));
+    setTimeout(() => majLocale = false, 1000);
+  } catch (e) {
+    console.error("❌ Échec suppression chantier Firebase :", e);
+  }
 });
 
 // === AJOUT D’UNE AFFECTATION ===
-document.getElementById("ajouter").addEventListener("click", () => {
+document.getElementById("ajouter").addEventListener("click", async () => {
   const date = dateInput.value;
   const metier = metierInput.value;
   const employe = employeSelect.value;
   const chantier = chantierSelect.value;
-  
+
   if (!date || !employe || !chantier) {
     alert("Merci de remplir tous les champs !");
     return;
@@ -153,11 +165,18 @@ document.getElementById("ajouter").addEventListener("click", () => {
   if (!planning[date][metier]) planning[date][metier] = {};
   planning[date][metier][employe] = chantier;
 
-  localStorage.setItem("planningSegond", JSON.stringify(planning));
-  genererTableauPlanning();
+  try {
+    majLocale = true;
+    await set(ref(db, "planning"), planning);
+    localStorage.setItem("planningSegond", JSON.stringify(planning));
+    genererTableauPlanning();
+    setTimeout(() => majLocale = false, 1000);
+  } catch (e) {
+    console.error("❌ Échec sauvegarde planning Firebase :", e);
+  }
 });
 
-// === GÉNÉRATION DU TABLEAU PLANNING ===
+// === GÉNÉRATION DU TABLEAU ===
 function genererTableauPlanning() {
   planningTable.innerHTML = "";
   const table = document.createElement("table");
@@ -172,16 +191,15 @@ function genererTableauPlanning() {
   });
   thead.appendChild(trHead);
 
-  const nbLignes = Math.max(...Object.values(employesParMetier).map(l => l.length));
+  const nbLignes = Math.max(...Object.values(employesParMetier).map(l => l.length || 0));
   for (let i = 0; i < nbLignes; i++) {
     const tr = document.createElement("tr");
     Object.keys(employesParMetier).forEach(metier => {
       const td = document.createElement("td");
-      const employe = employesParMetier[metier][i];
+      const employe = employesParMetier[metier]?.[i];
       if (employe) {
         const chantierDemain = chantierAffecteDemain(metier, employe);
         td.textContent = employe;
-
         if (chantierDemain) {
           td.classList.add("checked");
           td.textContent += ` → ${chantierDemain}`;
@@ -195,21 +213,46 @@ function genererTableauPlanning() {
   table.appendChild(thead);
   table.appendChild(tbody);
   planningTable.appendChild(table);
+
+  // ✨ Animation visuelle de mise à jour
+  planningTable.style.transition = "background 0.3s";
+  planningTable.style.background = "rgba(255, 30, 30, 0.2)";
+  setTimeout(() => (planningTable.style.background = "transparent"), 400);
 }
 
-// === Vérifie si l’employé est affecté demain ===
+// === VÉRIFICATION AFFECTATION DEMAIN ===
 function chantierAffecteDemain(metier, employe) {
   const demain = new Date();
   demain.setDate(demain.getDate() + 1);
   const dateStr = demain.toISOString().split("T")[0];
-  return planning[dateStr] &&
-    planning[dateStr][metier] &&
-    planning[dateStr][metier][employe]
-    ? planning[dateStr][metier][employe]
-    : null;
+  return planning[dateStr]?.[metier]?.[employe] || null;
 }
 
-// === AU CHARGEMENT ===
+// === 🔥 MISE À JOUR AUTOMATIQUE EN TEMPS RÉEL ===
+onValue(ref(db, "employes"), (snapshot) => {
+  if (snapshot.exists() && !majLocale) {
+    employesParMetier = snapshot.val();
+    chargerEmployesPourMetier();
+    genererTableauPlanning();
+  }
+});
+
+onValue(ref(db, "chantiers"), (snapshot) => {
+  if (snapshot.exists() && !majLocale) {
+    chantiersDisponibles = snapshot.val();
+    chargerChantiers();
+  }
+});
+
+onValue(ref(db, "planning"), (snapshot) => {
+  if (snapshot.exists() && !majLocale) {
+    planning = snapshot.val();
+    genererTableauPlanning();
+  }
+});
+
+// === CHARGEMENT INITIAL ===
+await chargerDepuisFirebase();
 chargerEmployesPourMetier();
 chargerChantiers();
 genererTableauPlanning();

@@ -3,17 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Planning Employés</title>
+  <title>Planning - Employés</title>
   <link rel="stylesheet" href="employes.css">
 </head>
 <body>
-  <!-- 🔙 BOUTON RETOUR -->
+  <!-- BARRE SUPÉRIEURE -->
   <div class="top-bar">
     <button id="retour">⬅ Retour</button>
     <h1>👷 Mon planning</h1>
   </div>
 
-    <div class="container"></div>
+  <!-- FORMULAIRE DE SÉLECTION -->
+  <div class="form">
     <label for="metier">Corps d'état :</label>
     <select id="metier">
       <option value="">-- Sélectionner --</option>
@@ -29,11 +30,15 @@
       <option value="">-- Sélectionner --</option>
     </select>
 
-    <button id="voirPlanning">Voir mon planning</button>
+    <button id="voirPlanning">📅 Voir mon planning</button>
+  </div>
 
+  <!-- CONTENEUR DU PLANNING -->
+  <div class="planning-container">
+    <h3 id="titrePlanning">📊 Planning de la semaine</h3>
     <div id="planningContainer" class="planning"></div>
   </div>
 
-  <script src="employes.js"></script>
+  <script type="module" src="employes.js"></script>
 </body>
 </html>
