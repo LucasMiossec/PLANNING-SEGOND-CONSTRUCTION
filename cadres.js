@@ -28,13 +28,14 @@ const chantierSelect = document.getElementById("chantier");
 const nouveauChantierInput = document.getElementById("nouveauChantier");
 const ajouterChantierBtn = document.getElementById("ajouterChantier");
 const supprimerChantierBtn = document.getElementById("supprimerChantier");
+const ajouterCongeBtn = document.getElementById("ajouterConge");
 const planningTable = document.getElementById("planningTable");
 
 // === VARIABLES ===
 let planning = {};
 let employesParMetier = {};
 let chantiersDisponibles = [];
-let majLocale = false; // ✅ sert à distinguer les modifs locales des maj Firebase
+let majLocale = false;
 
 // === CHARGEMENT INITIAL ===
 async function chargerDepuisFirebase() {
@@ -93,7 +94,7 @@ ajouterEmployeBtn.addEventListener("click", async () => {
     await set(ref(db, `employes/${metier}`), employesParMetier[metier]);
     localStorage.setItem("employesSegond", JSON.stringify(employesParMetier));
     nouvelEmployeInput.value = "";
-    chargerEmployesPourMetier(); // ✅ mise à jour immédiate
+    chargerEmployesPourMetier();
     setTimeout(() => majLocale = false, 1000);
   } catch (e) {
     console.error("❌ Échec ajout employé Firebase :", e);
@@ -111,7 +112,7 @@ supprimerEmployeBtn.addEventListener("click", async () => {
     majLocale = true;
     await set(ref(db, `employes/${metier}`), employesParMetier[metier]);
     localStorage.setItem("employesSegond", JSON.stringify(employesParMetier));
-    chargerEmployesPourMetier(); // ✅ mise à jour immédiate
+    chargerEmployesPourMetier();
     setTimeout(() => majLocale = false, 1000);
   } catch (e) {
     console.error("❌ Échec suppression employé Firebase :", e);
@@ -130,7 +131,7 @@ ajouterChantierBtn.addEventListener("click", async () => {
     await set(ref(db, "chantiers"), chantiersDisponibles);
     localStorage.setItem("chantiersSegond", JSON.stringify(chantiersDisponibles));
     nouveauChantierInput.value = "";
-    chargerChantiers(); // ✅ mise à jour immédiate
+    chargerChantiers();
     setTimeout(() => majLocale = false, 1000);
   } catch (e) {
     console.error("❌ Échec ajout chantier Firebase :", e);
@@ -146,7 +147,7 @@ supprimerChantierBtn.addEventListener("click", async () => {
     majLocale = true;
     await set(ref(db, "chantiers"), chantiersDisponibles);
     localStorage.setItem("chantiersSegond", JSON.stringify(chantiersDisponibles));
-    chargerChantiers(); // ✅ mise à jour immédiate
+    chargerChantiers();
     setTimeout(() => majLocale = false, 1000);
   } catch (e) {
     console.error("❌ Échec suppression chantier Firebase :", e);
@@ -180,6 +181,43 @@ document.getElementById("ajouter").addEventListener("click", async () => {
   }
 });
 
+// === AJOUT CONGÉ ===
+ajouterCongeBtn.addEventListener("click", async () => {
+  const date = dateInput.value;
+  const metier = metierInput.value;
+  const employe = employeSelect.value;
+  const duree = prompt("🗓️ Nombre de jours de congé ?", "1");
+
+  if (!date || !metier || !employe) {
+    alert("Merci de remplir les champs : date, métier et employé !");
+    return;
+  }
+
+  const nbJours = parseInt(duree);
+  if (isNaN(nbJours) || nbJours <= 0) return alert("Durée invalide !");
+
+  for (let i = 0; i < nbJours; i++) {
+    const jour = new Date(date);
+    jour.setDate(jour.getDate() + i);
+    const jourStr = jour.toISOString().split("T")[0];
+
+    if (!planning[jourStr]) planning[jourStr] = {};
+    if (!planning[jourStr][metier]) planning[jourStr][metier] = {};
+    planning[jourStr][metier][employe] = "CONGÉ 🌴";
+  }
+
+  try {
+    majLocale = true;
+    await set(ref(db, "planning"), planning);
+    localStorage.setItem("planningSegond", JSON.stringify(planning));
+    alert("✅ Congé enregistré !");
+    genererTableauPlanning();
+    setTimeout(() => majLocale = false, 1000);
+  } catch (e) {
+    console.error("❌ Échec ajout congé Firebase :", e);
+  }
+});
+
 // === GÉNÉRATION DU TABLEAU ===
 function genererTableauPlanning() {
   planningTable.innerHTML = "";
@@ -205,8 +243,13 @@ function genererTableauPlanning() {
         const chantierDemain = chantierAffecteDemain(metier, employe);
         td.textContent = employe;
         if (chantierDemain) {
-          td.classList.add("checked");
-          td.textContent += ` → ${chantierDemain}`;
+          if (chantierDemain.includes("CONGÉ")) {
+            td.classList.add("conge");
+            td.textContent = `${employe} 🌴`;
+          } else {
+            td.classList.add("checked");
+            td.textContent += ` → ${chantierDemain}`;
+          }
         }
       }
       tr.appendChild(td);
@@ -217,10 +260,6 @@ function genererTableauPlanning() {
   table.appendChild(thead);
   table.appendChild(tbody);
   planningTable.appendChild(table);
-
-  planningTable.style.transition = "background 0.3s";
-  planningTable.style.background = "rgba(255, 30, 30, 0.2)";
-  setTimeout(() => (planningTable.style.background = "transparent"), 400);
 }
 
 // === VÉRIFICATION AFFECTATION DEMAIN ===
@@ -231,7 +270,7 @@ function chantierAffecteDemain(metier, employe) {
   return planning[dateStr]?.[metier]?.[employe] || null;
 }
 
-// === 🔥 MISE À JOUR AUTOMATIQUE EN TEMPS RÉEL ===
+// === MISE À JOUR EN TEMPS RÉEL ===
 onValue(ref(db, "employes"), (snapshot) => {
   if (snapshot.exists() && !majLocale) {
     employesParMetier = snapshot.val();

@@ -97,7 +97,7 @@ select {
 }
 
 select:hover {
-  border-color: #ff1e1e; /* effet rouge au survol */
+  border-color: #ff1e1e;
 }
 
 select:focus {
@@ -106,7 +106,6 @@ select:focus {
   box-shadow: 0 0 5px rgba(255, 30, 30, 0.6);
 }
 
-/* fond des options dans la liste déroulante */
 select option {
   background: #000;
   color: #fff;
@@ -136,6 +135,24 @@ button:hover {
   filter: brightness(1.12);
 }
 
+/* === BOUTON CONGÉS === */
+.btn-conge {
+  background: linear-gradient(135deg, #ff9800, #e65100);
+  color: #fff;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  padding: 10px;
+  cursor: pointer;
+  transition: 0.3s;
+  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);
+}
+.btn-conge:hover {
+  transform: scale(1.05);
+  filter: brightness(1.15);
+}
+
+/* === AJOUT CHANTIER === */
 .ajout-chantier {
   display: flex;
   gap: 10px;
@@ -160,7 +177,7 @@ button:hover {
 /* === TABLEAU AVEC DÉFILEMENT === */
 #planningTable {
   width: 100%;
-  overflow-x: auto; /* ✅ Scroll horizontal activé */
+  overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-color: #b60000 rgba(255, 255, 255, 0.1);
   scrollbar-width: thin;
@@ -169,12 +186,10 @@ button:hover {
 #planningTable::-webkit-scrollbar {
   height: 10px;
 }
-
 #planningTable::-webkit-scrollbar-track {
   background: rgba(255, 255, 255, 0.05);
   border-radius: 8px;
 }
-
 #planningTable::-webkit-scrollbar-thumb {
   background: linear-gradient(135deg, #ff1e1e, #b60000);
   border-radius: 8px;
@@ -221,12 +236,22 @@ button:hover {
   color: #f0f0f0;
 }
 
+/* === CHANTIER AFFECTÉ === */
 #planningTable td.checked {
   background: linear-gradient(135deg, #1ea833, #148c29);
   color: #fff;
   font-weight: 700;
   border-color: rgba(0, 255, 0, 0.35);
   box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.2);
+}
+
+/* === CONGÉS === */
+#planningTable td.conge {
+  background: linear-gradient(135deg, #ff9800, #e65100);
+  color: #fff;
+  font-weight: 700;
+  border-color: rgba(255, 165, 0, 0.4);
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.25);
 }
 
 /* === RESPONSIVE === */
