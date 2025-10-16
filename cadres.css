@@ -87,31 +87,12 @@ button {
   font-size: 1em;
 }
 
-/* === MENUS DÉROULANTS NOIRS === */
 select {
-  background: #000; /* ✅ fond noir */
-  color: #fff;
-  border: 1px solid #555;
-  transition: all 0.2s ease;
-  cursor: pointer;
-}
-
-select:hover {
-  border-color: #ff1e1e;
-}
-
-select:focus {
-  outline: none;
-  border-color: #ff1e1e;
-  box-shadow: 0 0 5px rgba(255, 30, 30, 0.6);
-}
-
-select option {
   background: #000;
   color: #fff;
+  border: 1px solid #555;
 }
 
-/* === CHAMPS DE TEXTE === */
 input {
   background: rgba(255, 255, 255, 0.08);
   color: #fff;
@@ -125,7 +106,6 @@ button {
   background: linear-gradient(135deg, #ff1e1e, #b60000);
   color: #fff;
   font-weight: 600;
-  letter-spacing: 0.3px;
   cursor: pointer;
   transition: all 0.25s ease;
   box-shadow: 0 4px 14px rgba(255, 30, 30, 0.28);
@@ -152,29 +132,26 @@ button:hover {
   filter: brightness(1.15);
 }
 
-/* === AJOUT CHANTIER === */
-.ajout-chantier {
-  display: flex;
-  gap: 10px;
-  align-items: center;
+/* === NAVIGATION JOURS === */
+.navJour {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #fff;
+  font-size: 1.1em;
+  font-weight: bold;
+  margin-left: 8px;
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 4px 8px;
+  transition: all 0.2s ease;
 }
-.ajout-chantier input {
-  flex: 1;
-}
-
-/* === PLANNING CONTAINER === */
-.planning-container {
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
-  width: 95%;
-  max-width: 1300px;
-  padding: 22px 18px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
-  overflow: hidden;
+.navJour:hover {
+  background: #ff1e1e;
+  color: #fff;
+  transform: scale(1.1);
 }
 
-/* === TABLEAU AVEC DÉFILEMENT === */
+/* === TABLEAU === */
 #planningTable {
   width: 100%;
   overflow-x: auto;
@@ -183,106 +160,44 @@ button:hover {
   scrollbar-width: thin;
 }
 
-#planningTable::-webkit-scrollbar {
-  height: 10px;
-}
-#planningTable::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
-}
-#planningTable::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #ff1e1e, #b60000);
-  border-radius: 8px;
-}
-
-/* === TABLEAU === */
 #planningTable table {
   width: 1300px;
   border-collapse: collapse;
   background: rgba(255, 255, 255, 0.03);
-  table-layout: fixed;
 }
 
-/* === COLONNES === */
 #planningTable th,
 #planningTable td {
-  width: 260px;
   padding: 14px 16px;
   border: 1px solid rgba(255, 255, 255, 0.18);
   text-align: left;
-  vertical-align: top;
-  line-height: 1.4;
-  word-break: break-word;
-  overflow-wrap: anywhere;
-  white-space: normal;
 }
 
-/* === EN-TÊTES === */
 #planningTable th {
   background: #b60000;
   color: #fff;
   font-weight: 700;
-  letter-spacing: 0.4px;
-  text-transform: uppercase;
   text-align: center;
-  position: sticky;
-  top: 0;
-  z-index: 10;
 }
 
-/* === CELLULES === */
-#planningTable td {
-  background: rgba(255, 255, 255, 0.05);
-  color: #f0f0f0;
-}
-
-/* === CHANTIER AFFECTÉ === */
 #planningTable td.checked {
   background: linear-gradient(135deg, #1ea833, #148c29);
   color: #fff;
   font-weight: 700;
-  border-color: rgba(0, 255, 0, 0.35);
-  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.2);
 }
 
-/* === CONGÉS === */
 #planningTable td.conge {
   background: linear-gradient(135deg, #ff9800, #e65100);
   color: #fff;
   font-weight: 700;
-  border-color: rgba(255, 165, 0, 0.4);
-  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.25);
 }
 
 /* === RESPONSIVE === */
 @media (max-width: 900px) {
-  .form {
-    width: 100%;
-  }
-
-  #planningTable table {
-    width: 1000px;
-  }
-
-  #planningTable th,
-  #planningTable td {
-    width: 200px;
-    font-size: 0.95em;
-  }
+  .form { width: 100%; }
+  #planningTable table { width: 1000px; }
 }
 
 @media (max-width: 600px) {
-  #planningTable table {
-    width: 850px;
-  }
-
-  #planningTable th,
-  #planningTable td {
-    width: 170px;
-    font-size: 0.9em;
-  }
-
-  #planningTable::-webkit-scrollbar {
-    height: 8px;
-  }
+  #planningTable table { width: 850px; }
 }
