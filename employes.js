@@ -23,14 +23,19 @@ const metierInput = document.getElementById("metier");
 const employeSelect = document.getElementById("employe");
 const voirPlanningBtn = document.getElementById("voirPlanning");
 const planningContainer = document.getElementById("planningContainer");
+const periodeSemaine = document.getElementById("periodeSemaine");
+const prevSemaineBtn = document.getElementById("prevSemaine");
+const nextSemaineBtn = document.getElementById("nextSemaine");
 
 // === RETOUR ACCUEIL ===
 retourBtn.addEventListener("click", () => {
   window.location.href = "index.html";
 });
 
+// === VARIABLES ===
 let employesParMetier = {};
 let planning = {};
+let semaineOffset = 0; // 0 = semaine actuelle, +1 = suivante, -1 = précédente
 
 // === CHARGEMENT DES DONNÉES ===
 async function chargerDepuisFirebase() {
@@ -46,6 +51,50 @@ async function chargerDepuisFirebase() {
   }
 }
 
+// === OUTILS DE DATE ===
+function getLundi(date) {
+  const d = new Date(date);
+  const day = d.getDay(); // 0 = dim, 1 = lun, ... 6 = sam
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+// "20/10/2025"
+function fmtFR(d) {
+  return d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" });
+}
+
+// Met à jour le titre "Semaine du XX/XX/XXXX au YY/YY/YYYY"
+function majTitreSemaine() {
+  const base = new Date();
+  base.setDate(base.getDate() + semaineOffset * 7);
+
+  const lundi = getLundi(base);
+  const vendredi = new Date(lundi);
+  vendredi.setDate(lundi.getDate() + 4);
+
+  periodeSemaine.textContent = `${fmtFR(lundi)} au ${fmtFR(vendredi)}`;
+}
+
+// === NAVIGATION DE SEMAINE ===
+nextSemaineBtn.addEventListener("click", () => {
+  semaineOffset += 1;           // semaine suivante
+  majTitreSemaine();
+  if (metierInput.value && employeSelect.value) {
+    afficherPlanning(employeSelect.value, metierInput.value);
+  }
+});
+
+prevSemaineBtn.addEventListener("click", () => {
+  semaineOffset -= 1;           // semaine précédente
+  majTitreSemaine();
+  if (metierInput.value && employeSelect.value) {
+    afficherPlanning(employeSelect.value, metierInput.value);
+  }
+});
+
 // === CHARGEMENT EMPLOYÉS SELON MÉTIER ===
 function chargerEmployes() {
   const metier = metierInput.value;
@@ -57,7 +106,6 @@ function chargerEmployes() {
     employeSelect.appendChild(option);
   });
 }
-
 metierInput.addEventListener("change", chargerEmployes);
 
 // === AFFICHER LE PLANNING ===
@@ -71,8 +119,10 @@ voirPlanningBtn.addEventListener("click", () => {
 function afficherPlanning(employe, metier) {
   planningContainer.innerHTML = "";
 
-  const ajd = new Date();
-  const premierJour = new Date(ajd.setDate(ajd.getDate() - ajd.getDay() + 1));
+  // Base = aujourd'hui + offset de semaines, puis on récupère le lundi
+  const base = new Date();
+  base.setDate(base.getDate() + semaineOffset * 7);
+  const lundi = getLundi(base);
 
   const table = document.createElement("table");
   const thead = document.createElement("thead");
@@ -89,9 +139,10 @@ function afficherPlanning(employe, metier) {
 
   const trBody = document.createElement("tr");
   for (let i = 0; i < 5; i++) {
-    const date = new Date(premierJour);
-    date.setDate(premierJour.getDate() + i);
-    const dateStr = date.toISOString().split("T")[0];
+    const date = new Date(lundi);
+    date.setDate(lundi.getDate() + i);
+    const dateStr = date.toISOString().split("T")[0]; // YYYY-MM-DD attendue par la DB
+
     const td = document.createElement("td");
     const chantier = planning[dateStr]?.[metier]?.[employe] || "—";
     td.textContent = chantier;
@@ -102,16 +153,25 @@ function afficherPlanning(employe, metier) {
   table.appendChild(thead);
   table.appendChild(tbody);
   planningContainer.appendChild(table);
+
+  // MAJ du titre après rendu
+  majTitreSemaine();
 }
 
 // === SYNCHRONISATION TEMPS RÉEL ===
 onValue(ref(db, "planning"), (snapshot) => {
   if (snapshot.exists()) {
     planning = snapshot.val();
-    const metier = metierInput.value;
-    const employe = employeSelect.value;
-    if (metier && employe) afficherPlanning(employe, metier);
+    // Si un employé est sélectionné, on rafraîchit la semaine affichée
+    if (metierInput.value && employeSelect.value) {
+      afficherPlanning(employeSelect.value, metierInput.value);
+    } else {
+      // sinon on met quand même à jour le titre pour la semaine courante
+      majTitreSemaine();
+    }
   }
 });
 
+// === INITIALISATION ===
 await chargerDepuisFirebase();
+majTitreSemaine(); // Affiche tout de suite la semaine ACTUELLE (ex: du 20 au 24/10/2025)

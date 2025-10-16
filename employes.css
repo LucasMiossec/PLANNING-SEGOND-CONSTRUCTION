@@ -163,3 +163,39 @@ td.checked {
   .form { width: 100%; }
   th, td { font-size: 0.9em; padding: 10px 14px; }
 }
+
+/* === NAVIGATION DE SEMAINE === */
+.navJour {
+  border: none;
+  outline: none;
+  color: #fff;
+  font-size: 1.1em;
+  font-weight: 600;
+  border-radius: 8px;
+  width: 34px;
+  height: 34px;
+  margin-left: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(3px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: all 0.25s ease;
+}
+
+.navJour:hover {
+  transform: scale(1.12);
+  background: rgba(255, 30, 30, 0.25);
+  box-shadow: 0 0 8px rgba(255, 30, 30, 0.6);
+}
+
+.navJour.active {
+  background: linear-gradient(135deg, #ff1e1e, #b60000);
+  box-shadow: 0 0 10px rgba(255, 30, 30, 0.6),
+              inset 0 0 6px rgba(255, 255, 255, 0.25);
+  transform: scale(1.05);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}

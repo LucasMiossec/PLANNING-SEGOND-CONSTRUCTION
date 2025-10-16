@@ -3,17 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Planning - Employés</title>
+  <title>Planning Employés</title>
   <link rel="stylesheet" href="employes.css">
 </head>
 <body>
-  <!-- BARRE SUPÉRIEURE -->
+  <!-- 🔙 BOUTON RETOUR -->
   <div class="top-bar">
     <button id="retour">⬅ Retour</button>
     <h1>👷 Mon planning</h1>
   </div>
 
-  <!-- FORMULAIRE DE SÉLECTION -->
   <div class="form">
     <label for="metier">Corps d'état :</label>
     <select id="metier">
@@ -30,12 +29,16 @@
       <option value="">-- Sélectionner --</option>
     </select>
 
-    <button id="voirPlanning">📅 Voir mon planning</button>
+    <button id="voirPlanning">Voir mon planning</button>
   </div>
 
-  <!-- CONTENEUR DU PLANNING -->
   <div class="planning-container">
-    <h3 id="titrePlanning">📊 Planning de la semaine</h3>
+    <h3 id="titreSemaine" style="display:flex; align-items:center; gap:8px; justify-content:center;">
+      📅 Semaine du <span id="periodeSemaine"></span>
+      <button id="prevSemaine" class="navJour" aria-label="Semaine précédente">◀</button>
+      <button id="nextSemaine" class="navJour" aria-label="Semaine suivante">▶</button>
+    </h3>
+
     <div id="planningContainer" class="planning"></div>
   </div>
 
