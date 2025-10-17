@@ -17,13 +17,13 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// === ⚙️ FONCTION DE CORRECTION DÉCALAGE D'UN JOUR ===
+// === FIX DÉCALAGE UTC ===
 function formatDateLocale(date) {
   const d = new Date(date);
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`; // ✅ renvoie YYYY-MM-DD sans conversion UTC
+  return `${year}-${month}-${day}`;
 }
 
 // === ÉLÉMENTS DU DOM ===
@@ -36,44 +36,36 @@ const periodeSemaine = document.getElementById("periodeSemaine");
 const prevSemaineBtn = document.getElementById("prevSemaine");
 const nextSemaineBtn = document.getElementById("nextSemaine");
 
-// === RETOUR ACCUEIL ===
-retourBtn.addEventListener("click", () => {
-  window.location.href = "index.html";
-});
+// === RETOUR ===
+retourBtn.addEventListener("click", () => window.location.href = "index.html");
 
 // === VARIABLES ===
 let employesParMetier = {};
 let planning = {};
-let semaineOffset = 0; // 0 = semaine actuelle, +1 = suivante, -1 = précédente
+let semaineOffset = 0;
 
-// === CHARGEMENT DES DONNÉES ===
+// === FIREBASE LOAD ===
 async function chargerDepuisFirebase() {
   try {
     const dbRef = ref(db);
     const snapEmp = await get(child(dbRef, "employes"));
     employesParMetier = snapEmp.exists() ? snapEmp.val() : {};
-
     const snapPl = await get(child(dbRef, "planning"));
     planning = snapPl.exists() ? snapPl.val() : {};
-  } catch (e) {
-    console.error("⚠️ Erreur Firebase :", e);
-  }
+  } catch (e) { console.error("⚠️ Erreur Firebase :", e); }
 }
 
 // === OUTILS DE DATE ===
 function getLundi(date) {
   const d = new Date(date);
-  const day = d.getDay(); // 0 = dimanche, 1 = lundi, etc.
+  const day = d.getDay();
   const diff = day === 0 ? -6 : 1 - day;
   d.setDate(d.getDate() + diff);
-  d.setHours(0, 0, 0, 0);
   return d;
 }
-
 function fmtFR(d) {
   return d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
-
 function majTitreSemaine() {
   const base = new Date();
   base.setDate(base.getDate() + semaineOffset * 7);
@@ -83,44 +75,35 @@ function majTitreSemaine() {
   periodeSemaine.textContent = `${fmtFR(lundi)} au ${fmtFR(vendredi)}`;
 }
 
-// === NAVIGATION DE SEMAINE ===
-nextSemaineBtn.addEventListener("click", () => {
-  semaineOffset++;
-  majTitreSemaine();
-  if (metierInput.value && employeSelect.value) afficherPlanning(employeSelect.value, metierInput.value);
-});
+// === NAVIGATION ===
+nextSemaineBtn.addEventListener("click", () => { semaineOffset++; majTitreSemaine(); majTable(); });
+prevSemaineBtn.addEventListener("click", () => { semaineOffset--; majTitreSemaine(); majTable(); });
 
-prevSemaineBtn.addEventListener("click", () => {
-  semaineOffset--;
-  majTitreSemaine();
-  if (metierInput.value && employeSelect.value) afficherPlanning(employeSelect.value, metierInput.value);
-});
-
-// === CHARGEMENT EMPLOYÉS SELON MÉTIER ===
+// === EMPLOYÉS ===
 function chargerEmployes() {
   const metier = metierInput.value;
   employeSelect.innerHTML = '<option value="">-- Sélectionner --</option>';
   (employesParMetier[metier] || []).forEach(nom => {
-    const option = document.createElement("option");
-    option.value = nom;
-    option.textContent = nom;
-    employeSelect.appendChild(option);
+    const o = document.createElement("option");
+    o.value = nom; o.textContent = nom;
+    employeSelect.appendChild(o);
   });
 }
 metierInput.addEventListener("change", chargerEmployes);
 
-// === AFFICHER LE PLANNING ===
-voirPlanningBtn.addEventListener("click", () => {
+// === AFFICHER PLANNING ===
+voirPlanningBtn.addEventListener("click", majTable);
+
+function majTable() {
   const metier = metierInput.value;
   const employe = employeSelect.value;
-  if (!metier || !employe) return alert("Sélectionne ton métier et ton prénom !");
+  if (!metier || !employe) return;
   afficherPlanning(employe, metier);
-});
+}
 
 function afficherPlanning(employe, metier) {
   planningContainer.innerHTML = "";
 
-  // Base = aujourd'hui + offset de semaines, puis on récupère le lundi
   const base = new Date();
   base.setDate(base.getDate() + semaineOffset * 7);
   const lundi = getLundi(base);
@@ -131,21 +114,18 @@ function afficherPlanning(employe, metier) {
 
   const jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"];
   const trHead = document.createElement("tr");
-  jours.forEach(j => {
-    const th = document.createElement("th");
-    th.textContent = j;
-    trHead.appendChild(th);
-  });
+  jours.forEach(j => { const th = document.createElement("th"); th.textContent = j; trHead.appendChild(th); });
   thead.appendChild(trHead);
 
   const trBody = document.createElement("tr");
   for (let i = 0; i < 5; i++) {
     const date = new Date(lundi);
     date.setDate(lundi.getDate() + i);
-    const dateStr = formatDateLocale(date); // ✅ Correction ici
-
+    const dateStr = formatDateLocale(date);
     const td = document.createElement("td");
-    const chantier = planning[dateStr]?.[metier]?.[employe] || "—";
+
+    let chantier = planning[dateStr]?.[metier]?.[employe] || "—";
+    if (Array.isArray(chantier)) chantier = chantier.join(", ");
     td.textContent = chantier;
     trBody.appendChild(td);
   }
@@ -154,23 +134,17 @@ function afficherPlanning(employe, metier) {
   table.appendChild(thead);
   table.appendChild(tbody);
   planningContainer.appendChild(table);
-
-  // MAJ du titre après rendu
   majTitreSemaine();
 }
 
-// === SYNCHRONISATION TEMPS RÉEL ===
-onValue(ref(db, "planning"), (snapshot) => {
-  if (snapshot.exists()) {
-    planning = snapshot.val();
-    if (metierInput.value && employeSelect.value) {
-      afficherPlanning(employeSelect.value, metierInput.value);
-    } else {
-      majTitreSemaine();
-    }
+// === SYNC TEMPS RÉEL ===
+onValue(ref(db, "planning"), snap => {
+  if (snap.exists()) {
+    planning = snap.val();
+    majTable();
   }
 });
 
-// === INITIALISATION ===
+// === INIT ===
 await chargerDepuisFirebase();
 majTitreSemaine();

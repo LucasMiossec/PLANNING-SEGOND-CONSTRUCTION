@@ -135,6 +135,28 @@ button:hover {
   filter: brightness(1.12);
 }
 
+/* === BOUTON "AJOUTER AU PLANNING" (VERT) === */
+#ajouter {
+  background: linear-gradient(135deg, #28a745, #1e7e34); /* vert doux pro */
+  color: #fff;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 14px rgba(40, 167, 69, 0.35);
+}
+#ajouter:hover {
+  transform: scale(1.05);
+  filter: brightness(1.15);
+  box-shadow: 0 0 15px rgba(72, 255, 120, 0.6);
+}
+#ajouter:active {
+  transform: scale(0.95);
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.4);
+}
+
 /* === BOUTON CONGÉS === */
 .btn-conge {
   background: linear-gradient(135deg, #ff9800, #e65100);
