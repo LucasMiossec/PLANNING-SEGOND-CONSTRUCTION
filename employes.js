@@ -17,6 +17,15 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
+// === ⚙️ FONCTION DE CORRECTION DÉCALAGE D'UN JOUR ===
+function formatDateLocale(date) {
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`; // ✅ renvoie YYYY-MM-DD sans conversion UTC
+}
+
 // === ÉLÉMENTS DU DOM ===
 const retourBtn = document.getElementById("retour");
 const metierInput = document.getElementById("metier");
@@ -54,45 +63,37 @@ async function chargerDepuisFirebase() {
 // === OUTILS DE DATE ===
 function getLundi(date) {
   const d = new Date(date);
-  const day = d.getDay(); // 0 = dim, 1 = lun, ... 6 = sam
+  const day = d.getDay(); // 0 = dimanche, 1 = lundi, etc.
   const diff = day === 0 ? -6 : 1 - day;
   d.setDate(d.getDate() + diff);
   d.setHours(0, 0, 0, 0);
   return d;
 }
 
-// "20/10/2025"
 function fmtFR(d) {
   return d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 
-// Met à jour le titre "Semaine du XX/XX/XXXX au YY/YY/YYYY"
 function majTitreSemaine() {
   const base = new Date();
   base.setDate(base.getDate() + semaineOffset * 7);
-
   const lundi = getLundi(base);
   const vendredi = new Date(lundi);
   vendredi.setDate(lundi.getDate() + 4);
-
   periodeSemaine.textContent = `${fmtFR(lundi)} au ${fmtFR(vendredi)}`;
 }
 
 // === NAVIGATION DE SEMAINE ===
 nextSemaineBtn.addEventListener("click", () => {
-  semaineOffset += 1;           // semaine suivante
+  semaineOffset++;
   majTitreSemaine();
-  if (metierInput.value && employeSelect.value) {
-    afficherPlanning(employeSelect.value, metierInput.value);
-  }
+  if (metierInput.value && employeSelect.value) afficherPlanning(employeSelect.value, metierInput.value);
 });
 
 prevSemaineBtn.addEventListener("click", () => {
-  semaineOffset -= 1;           // semaine précédente
+  semaineOffset--;
   majTitreSemaine();
-  if (metierInput.value && employeSelect.value) {
-    afficherPlanning(employeSelect.value, metierInput.value);
-  }
+  if (metierInput.value && employeSelect.value) afficherPlanning(employeSelect.value, metierInput.value);
 });
 
 // === CHARGEMENT EMPLOYÉS SELON MÉTIER ===
@@ -141,7 +142,7 @@ function afficherPlanning(employe, metier) {
   for (let i = 0; i < 5; i++) {
     const date = new Date(lundi);
     date.setDate(lundi.getDate() + i);
-    const dateStr = date.toISOString().split("T")[0]; // YYYY-MM-DD attendue par la DB
+    const dateStr = formatDateLocale(date); // ✅ Correction ici
 
     const td = document.createElement("td");
     const chantier = planning[dateStr]?.[metier]?.[employe] || "—";
@@ -162,11 +163,9 @@ function afficherPlanning(employe, metier) {
 onValue(ref(db, "planning"), (snapshot) => {
   if (snapshot.exists()) {
     planning = snapshot.val();
-    // Si un employé est sélectionné, on rafraîchit la semaine affichée
     if (metierInput.value && employeSelect.value) {
       afficherPlanning(employeSelect.value, metierInput.value);
     } else {
-      // sinon on met quand même à jour le titre pour la semaine courante
       majTitreSemaine();
     }
   }
@@ -174,4 +173,4 @@ onValue(ref(db, "planning"), (snapshot) => {
 
 // === INITIALISATION ===
 await chargerDepuisFirebase();
-majTitreSemaine(); // Affiche tout de suite la semaine ACTUELLE (ex: du 20 au 24/10/2025)
+majTitreSemaine();
