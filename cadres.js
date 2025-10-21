@@ -15,7 +15,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// === FONCTION DE CORRECTION UTC ===
+// === FONCTION DATE LOCALE ===
 function formatDateLocale(date) {
   const d = new Date(date);
   const year = d.getFullYear();
@@ -63,9 +63,14 @@ async function chargerDepuisFirebase() {
   planning = snapPl.exists() ? snapPl.val() : {};
 }
 
-// === OUTILS ===
+// === FONCTIONS UTILES ===
 function formaterDateFr(date) {
-  return date.toLocaleDateString("fr-FR", { weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" });
+  return date.toLocaleDateString("fr-FR", {
+    weekday: "long",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric"
+  });
 }
 function majDateEtTableau() {
   dateAffichee.textContent = formaterDateFr(dateCourante);
@@ -205,10 +210,10 @@ function genererTableauPlanning(dateCible) {
         td.textContent = e;
         if (ch) {
           if (Array.isArray(ch)) {
-            td.classList.add("checked"); // ✅ FOND VERT pour chantier
+            td.classList.add("checked");
             td.textContent += ` → ${ch.join(", ")}`;
           } else if (ch.includes("CONGÉ")) {
-            td.classList.add("conge"); // 🌴 orange
+            td.classList.add("conge");
             td.textContent = `${e} 🌴`;
           }
         }
@@ -225,6 +230,13 @@ function genererTableauPlanning(dateCible) {
 // === NAVIGATION ===
 nextJourBtn.addEventListener("click", () => { dateCourante.setDate(dateCourante.getDate() + 1); majDateEtTableau(); });
 prevJourBtn.addEventListener("click", () => { dateCourante.setDate(dateCourante.getDate() - 1); majDateEtTableau(); });
+
+// === EXPORT / IMPRIMER LE PLANNING ===
+document.getElementById("exportPDF").addEventListener("click", () => {
+  const win = window.open("print.html", "_blank");
+  localStorage.setItem("planningHTML", document.querySelector(".planning-container").innerHTML);
+  localStorage.setItem("planningDate", dateAffichee.textContent);
+});
 
 // === SYNC FIREBASE ===
 onValue(ref(db, "planning"), s => { if (s.exists()) { planning = s.val(); majDateEtTableau(); } });

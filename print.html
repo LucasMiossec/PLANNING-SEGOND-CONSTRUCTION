@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Planning Segond - Impression</title>
+  <link rel="stylesheet" href="print.css">
+</head>
+<body>
+  <header>
+    <img src="logo-segond.png" alt="Logo Segond">
+    <h2 id="titre"></h2>
+  </header>
+  <div id="planningContent"></div>
+
+  <script>
+    document.getElementById("planningContent").innerHTML = localStorage.getItem("planningHTML");
+    document.getElementById("titre").textContent = "📅 " + localStorage.getItem("planningDate");
+    window.onload = () => window.print();
+  </script>
+</body>
+</html>
