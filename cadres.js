@@ -37,6 +37,7 @@ const nouveauChantierInput = document.getElementById("nouveauChantier");
 const ajouterChantierBtn = document.getElementById("ajouterChantier");
 const supprimerChantierBtn = document.getElementById("supprimerChantier");
 const ajouterCongeBtn = document.getElementById("ajouterConge");
+const ajouterMaladieBtn = document.getElementById("ajouterMaladie");
 const supprimerChantierJourBtn = document.getElementById("supprimerChantierJour");
 const planningTable = document.getElementById("planningTable");
 
@@ -72,10 +73,12 @@ function formaterDateFr(date) {
     year: "numeric"
   });
 }
+
 function majDateEtTableau() {
   dateAffichee.textContent = formaterDateFr(dateCourante);
   genererTableauPlanning(dateCourante);
 }
+
 function chargerListe(select, data) {
   select.innerHTML = '<option value="">-- Sélectionner --</option>';
   data.forEach(item => {
@@ -85,6 +88,7 @@ function chargerListe(select, data) {
     select.appendChild(o);
   });
 }
+
 function chargerEmployesPourMetier() {
   chargerListe(employeSelect, employesParMetier[metierInput.value] || []);
 }
@@ -124,6 +128,7 @@ ajouterChantierBtn.addEventListener("click", async () => {
   await set(ref(db, "chantiers"), chantiersDisponibles);
   chargerChantiers();
 });
+
 supprimerChantierBtn.addEventListener("click", async () => {
   const nom = chantierSelect.value;
   if (!nom) return alert("Sélectionne un chantier !");
@@ -179,9 +184,30 @@ ajouterCongeBtn.addEventListener("click", async () => {
     const jourStr = formatDateLocale(jour);
     if (!planning[jourStr]) planning[jourStr] = {};
     if (!planning[jourStr][metier]) planning[jourStr][metier] = {};
-    planning[jourStr][metier][employe] = ["CONGÉ 🌴"];
+    planning[jourStr][metier][employe] = "CONGÉ 🌴";
   }
   await set(ref(db, "planning"), planning);
+  majDateEtTableau();
+});
+
+// === AJOUT ARRÊT MALADIE ===
+ajouterMaladieBtn.addEventListener("click", async () => {
+  const date = formatDateLocale(dateInput.value);
+  const metier = metierInput.value;
+  const employe = employeSelect.value;
+  const duree = prompt("🩹 Nombre de jours d'arrêt maladie ?", "1");
+  const nbJours = parseInt(duree);
+  if (!date || !metier || !employe || isNaN(nbJours)) return alert("Champs invalides !");
+  for (let i = 0; i < nbJours; i++) {
+    const jour = new Date(date);
+    jour.setDate(jour.getDate() + i);
+    const jourStr = formatDateLocale(jour);
+    if (!planning[jourStr]) planning[jourStr] = {};
+    if (!planning[jourStr][metier]) planning[jourStr][metier] = {};
+    planning[jourStr][metier][employe] = "ARRÊT 🚑";
+  }
+  await set(ref(db, "planning"), planning);
+  alert("🚑 Arrêt maladie enregistré !");
   majDateEtTableau();
 });
 
@@ -192,6 +218,7 @@ function genererTableauPlanning(dateCible) {
   const table = document.createElement("table");
   const thead = document.createElement("thead");
   const tbody = document.createElement("tbody");
+
   const trHead = document.createElement("tr");
   Object.keys(employesParMetier).forEach(m => {
     const th = document.createElement("th");
@@ -199,7 +226,9 @@ function genererTableauPlanning(dateCible) {
     trHead.appendChild(th);
   });
   thead.appendChild(trHead);
+
   const nb = Math.max(...Object.values(employesParMetier).map(l => l.length || 0));
+
   for (let i = 0; i < nb; i++) {
     const tr = document.createElement("tr");
     Object.keys(employesParMetier).forEach(m => {
@@ -209,12 +238,20 @@ function genererTableauPlanning(dateCible) {
         const ch = planning[dateStr]?.[m]?.[e];
         td.textContent = e;
         if (ch) {
-          if (Array.isArray(ch)) {
+          td.classList.remove("checked", "conge", "maladie");
+          const value = Array.isArray(ch) && ch.length === 1 && (ch[0].includes("CONGÉ") || ch[0].includes("ARRÊT"))
+            ? ch[0]
+            : ch;
+
+          if (Array.isArray(value)) {
             td.classList.add("checked");
-            td.textContent += ` → ${ch.join(", ")}`;
-          } else if (ch.includes("CONGÉ")) {
+            td.textContent += ` → ${value.join(", ")}`;
+          } else if (typeof value === "string" && value.includes("CONGÉ")) {
             td.classList.add("conge");
             td.textContent = `${e} 🌴`;
+          } else if (typeof value === "string" && value.includes("ARRÊT")) {
+            td.classList.add("maladie");
+            td.textContent = `${e} 🚑`;
           }
         }
       }
@@ -222,6 +259,7 @@ function genererTableauPlanning(dateCible) {
     });
     tbody.appendChild(tr);
   }
+
   table.appendChild(thead);
   table.appendChild(tbody);
   planningTable.appendChild(table);
@@ -239,7 +277,12 @@ document.getElementById("exportPDF").addEventListener("click", () => {
 });
 
 // === SYNC FIREBASE ===
-onValue(ref(db, "planning"), s => { if (s.exists()) { planning = s.val(); majDateEtTableau(); } });
+onValue(ref(db, "planning"), s => {
+  if (s.exists()) {
+    planning = s.val();
+    majDateEtTableau();
+  }
+});
 
 // === INIT ===
 await chargerDepuisFirebase();
