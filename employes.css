@@ -199,3 +199,23 @@ td.checked {
   transform: scale(1.05);
   border: 1px solid rgba(255, 255, 255, 0.25);
 }
+
+/* === BOUTON IMPRIMER / PDF === */
+.print-btn {
+  margin-top: 25px;
+  padding: 12px 22px;
+  background: linear-gradient(135deg, #ff1e1e, #b60000);
+  color: #fff;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1em;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(255, 30, 30, 0.3);
+}
+
+.print-btn:hover {
+  transform: scale(1.05);
+  filter: brightness(1.15);
+}

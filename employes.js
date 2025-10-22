@@ -35,6 +35,7 @@ const planningContainer = document.getElementById("planningContainer");
 const periodeSemaine = document.getElementById("periodeSemaine");
 const prevSemaineBtn = document.getElementById("prevSemaine");
 const nextSemaineBtn = document.getElementById("nextSemaine");
+const exportBtn = document.getElementById("exportPDF"); // ✅ Bouton PDF
 
 // === RETOUR ===
 retourBtn.addEventListener("click", () => window.location.href = "index.html");
@@ -52,7 +53,9 @@ async function chargerDepuisFirebase() {
     employesParMetier = snapEmp.exists() ? snapEmp.val() : {};
     const snapPl = await get(child(dbRef, "planning"));
     planning = snapPl.exists() ? snapPl.val() : {};
-  } catch (e) { console.error("⚠️ Erreur Firebase :", e); }
+  } catch (e) {
+    console.error("⚠️ Erreur Firebase :", e);
+  }
 }
 
 // === OUTILS DE DATE ===
@@ -76,8 +79,16 @@ function majTitreSemaine() {
 }
 
 // === NAVIGATION ===
-nextSemaineBtn.addEventListener("click", () => { semaineOffset++; majTitreSemaine(); majTable(); });
-prevSemaineBtn.addEventListener("click", () => { semaineOffset--; majTitreSemaine(); majTable(); });
+nextSemaineBtn.addEventListener("click", () => {
+  semaineOffset++;
+  majTitreSemaine();
+  majTable();
+});
+prevSemaineBtn.addEventListener("click", () => {
+  semaineOffset--;
+  majTitreSemaine();
+  majTable();
+});
 
 // === EMPLOYÉS ===
 function chargerEmployes() {
@@ -85,7 +96,8 @@ function chargerEmployes() {
   employeSelect.innerHTML = '<option value="">-- Sélectionner --</option>';
   (employesParMetier[metier] || []).forEach(nom => {
     const o = document.createElement("option");
-    o.value = nom; o.textContent = nom;
+    o.value = nom;
+    o.textContent = nom;
     employeSelect.appendChild(o);
   });
 }
@@ -114,7 +126,11 @@ function afficherPlanning(employe, metier) {
 
   const jours = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"];
   const trHead = document.createElement("tr");
-  jours.forEach(j => { const th = document.createElement("th"); th.textContent = j; trHead.appendChild(th); });
+  jours.forEach(j => {
+    const th = document.createElement("th");
+    th.textContent = j;
+    trHead.appendChild(th);
+  });
   thead.appendChild(trHead);
 
   const trBody = document.createElement("tr");
@@ -144,6 +160,15 @@ onValue(ref(db, "planning"), snap => {
     majTable();
   }
 });
+
+// === EXPORT / IMPRIMER LE PLANNING ===
+if (exportBtn) {
+  exportBtn.addEventListener("click", () => {
+    const win = window.open("print.html", "_blank");
+    localStorage.setItem("planningHTML", document.querySelector(".planning-container").innerHTML);
+    localStorage.setItem("planningDate", periodeSemaine.textContent);
+  });
+}
 
 // === INIT ===
 await chargerDepuisFirebase();
