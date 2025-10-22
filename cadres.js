@@ -236,8 +236,9 @@ function genererTableauPlanning(dateCible) {
       const e = employesParMetier[m]?.[i];
       if (e) {
         const ch = planning[dateStr]?.[m]?.[e];
-        td.textContent = e;
-        if (ch) {
+        if (!ch) {
+          td.textContent = e;
+        } else {
           td.classList.remove("checked", "conge", "maladie");
           const value = Array.isArray(ch) && ch.length === 1 && (ch[0].includes("CONGÉ") || ch[0].includes("ARRÊT"))
             ? ch[0]
@@ -245,13 +246,18 @@ function genererTableauPlanning(dateCible) {
 
           if (Array.isArray(value)) {
             td.classList.add("checked");
-            td.textContent += ` → ${value.join(", ")}`;
+            // ✅ Saut de ligne ajouté entre le nom et les chantiers
+            td.innerHTML = `<strong>${e}</strong><br>${value.join("<br>")}`;
           } else if (typeof value === "string" && value.includes("CONGÉ")) {
             td.classList.add("conge");
-            td.textContent = `${e} 🌴`;
+            td.innerHTML = `<strong>${e}</strong><br>CONGÉ 🌴`;
           } else if (typeof value === "string" && value.includes("ARRÊT")) {
             td.classList.add("maladie");
-            td.textContent = `${e} 🚑`;
+            td.innerHTML = `<strong>${e}</strong><br>ARRÊT 🚑`;
+          } else {
+            td.classList.add("checked");
+            // ✅ Saut de ligne ajouté ici aussi
+            td.innerHTML = `<strong>${e}</strong><br>${value}`;
           }
         }
       }
@@ -264,6 +270,7 @@ function genererTableauPlanning(dateCible) {
   table.appendChild(tbody);
   planningTable.appendChild(table);
 }
+
 
 // === NAVIGATION ===
 nextJourBtn.addEventListener("click", () => { dateCourante.setDate(dateCourante.getDate() + 1); majDateEtTableau(); });

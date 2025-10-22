@@ -272,15 +272,11 @@ button:hover {
 /* === COLONNES === */
 #planningTable th,
 #planningTable td {
-  width: 260px;
-  padding: 14px 16px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  text-align: left;
-  vertical-align: top;
-  line-height: 1.4;
-  word-break: break-word;
-  overflow-wrap: anywhere;
-  white-space: normal;
+  background: rgba(255, 255, 255, 0.05);
+  color: #f0f0f0;
+  white-space: normal;          /* ✅ Autorise les retours à la ligne */
+  line-height: 1.4;             /* ✅ Meilleure lisibilité */
+  padding: 12px 14px;           /* ✅ Un peu d’air autour du texte */
 }
 
 /* === EN-TÊTES === */
