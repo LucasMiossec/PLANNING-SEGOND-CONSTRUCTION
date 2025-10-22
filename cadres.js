@@ -58,8 +58,17 @@ async function chargerDepuisFirebase() {
   const dbRef = ref(db);
   const snapEmp = await get(child(dbRef, "employes"));
   employesParMetier = snapEmp.exists() ? snapEmp.val() : {};
+
   const snapCh = await get(child(dbRef, "chantiers"));
   chantiersDisponibles = snapCh.exists() ? snapCh.val() : [];
+
+  // ✅ Tri intelligent des chantiers (AF25/xxxx)
+  chantiersDisponibles.sort((a, b) => {
+    const numA = parseInt(a.match(/AF\s*\d{2}\/(\d+)/)?.[1] || 99999);
+    const numB = parseInt(b.match(/AF\s*\d{2}\/(\d+)/)?.[1] || 99999);
+    return numA - numB;
+  });
+
   const snapPl = await get(child(dbRef, "planning"));
   planning = snapPl.exists() ? snapPl.val() : {};
 }
@@ -92,9 +101,17 @@ function chargerListe(select, data) {
 function chargerEmployesPourMetier() {
   chargerListe(employeSelect, employesParMetier[metierInput.value] || []);
 }
+
 function chargerChantiers() {
-  chargerListe(chantierSelect, chantiersDisponibles);
+  // ✅ Trie avant affichage
+  const chantiersTries = [...chantiersDisponibles].sort((a, b) => {
+    const numA = parseInt(a.match(/AF\s*\d{2}\/(\d+)/)?.[1] || 99999);
+    const numB = parseInt(b.match(/AF\s*\d{2}\/(\d+)/)?.[1] || 99999);
+    return numA - numB;
+  });
+  chargerListe(chantierSelect, chantiersTries);
 }
+
 metierInput.addEventListener("change", chargerEmployesPourMetier);
 
 // === AJOUT EMPLOYÉ ===
@@ -125,6 +142,14 @@ ajouterChantierBtn.addEventListener("click", async () => {
   if (!nom) return alert("Entre un nom !");
   if (chantiersDisponibles.includes(nom)) return alert("Existe déjà !");
   chantiersDisponibles.push(nom);
+
+  // ✅ Trie directement après ajout
+  chantiersDisponibles.sort((a, b) => {
+    const numA = parseInt(a.match(/AF\s*\d{2}\/(\d+)/)?.[1] || 99999);
+    const numB = parseInt(b.match(/AF\s*\d{2}\/(\d+)/)?.[1] || 99999);
+    return numA - numB;
+  });
+
   await set(ref(db, "chantiers"), chantiersDisponibles);
   chargerChantiers();
 });
