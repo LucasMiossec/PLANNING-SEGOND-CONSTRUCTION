@@ -9,12 +9,40 @@
   <header>
     <img src="logo-segond.png" alt="Logo Segond">
     <h2 id="titre"></h2>
+    <p id="semaine"></p>
   </header>
+
   <div id="planningContent"></div>
 
   <script>
-    document.getElementById("planningContent").innerHTML = localStorage.getItem("planningHTML");
-    document.getElementById("titre").textContent = "📅 " + localStorage.getItem("planningDate");
+    // === RÉCUPÉRATION DES DONNÉES ===
+    const planningHTML = localStorage.getItem("planningHTML");
+    const planningDate = localStorage.getItem("planningDate");     // ex: "Mardi 28/10/2025"
+    const planningDateISO = localStorage.getItem("planningDateISO"); // ex: "2025-10-28"
+
+    // === AFFICHAGE DU PLANNING ===
+    document.getElementById("planningContent").innerHTML = planningHTML || "";
+    document.getElementById("titre").textContent = "📅 " + (planningDate || "Date inconnue");
+
+    // === CALCUL DU NUMÉRO DE SEMAINE ISO ===
+    function getWeekNumber(date) {
+      const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+      const dayNum = d.getUTCDay() || 7; // Lundi = 1 ... Dimanche = 7
+      d.setUTCDate(d.getUTCDate() + 4 - dayNum); // Se placer sur le jeudi de la semaine ISO
+      const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+      return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+    }
+
+    // === AFFICHAGE DU NUMÉRO DE SEMAINE ===
+    if (planningDateISO) {
+      const date = new Date(planningDateISO);
+      const weekNum = getWeekNumber(date);
+      document.getElementById("semaine").textContent = "🗓️ Semaine " + weekNum;
+    } else {
+      document.getElementById("semaine").textContent = "🗓️ Semaine inconnue";
+    }
+
+    // === IMPRESSION ===
     window.onload = () => window.print();
   </script>
 </body>

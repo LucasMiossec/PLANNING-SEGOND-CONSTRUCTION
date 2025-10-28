@@ -303,10 +303,19 @@ prevJourBtn.addEventListener("click", () => { dateCourante.setDate(dateCourante.
 
 // === EXPORT / IMPRIMER LE PLANNING ===
 document.getElementById("exportPDF").addEventListener("click", () => {
-  const win = window.open("print.html", "_blank");
+  // 🧾 1. Sauvegarde d'abord les données dans le localStorage
   localStorage.setItem("planningHTML", document.querySelector(".planning-container").innerHTML);
   localStorage.setItem("planningDate", dateAffichee.textContent);
+
+  // 🗓️ 2. Date ISO propre (format YYYY-MM-DD) pour le calcul de la semaine
+  const dateISO = dateCourante.toISOString().split("T")[0];
+  localStorage.setItem("planningDateISO", dateISO);
+
+  // 🖨️ 3. Ouvre la page d’impression APRES la sauvegarde
+  window.open("print.html", "_blank");
 });
+
+
 
 // === SYNC FIREBASE ===
 onValue(ref(db, "planning"), s => {
