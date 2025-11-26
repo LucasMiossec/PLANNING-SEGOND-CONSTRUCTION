@@ -15,16 +15,16 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// === FONCTION DATE LOCALE ===
+// === FONCTION DATE STANDARD ===
 function formatDateLocale(date) {
   const d = new Date(date);
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+  return `${y}-${m}-${day}`;
 }
 
-// === ÉLÉMENTS DOM ===
+// === ELEMENTS DOM ===
 const retourBtn = document.getElementById("retour");
 const dateInput = document.getElementById("date");
 const metierInput = document.getElementById("metier");
@@ -41,9 +41,10 @@ const ajouterMaladieBtn = document.getElementById("ajouterMaladie");
 const supprimerChantierJourBtn = document.getElementById("supprimerChantierJour");
 const planningTable = document.getElementById("planningTable");
 
-// === NAVIGATION JOUR ===
+// === NAVIGATION DATE ===
 let dateCourante = new Date();
 dateCourante.setDate(dateCourante.getDate() + 1);
+
 const dateAffichee = document.getElementById("dateAffichee");
 const prevJourBtn = document.getElementById("prevJour");
 const nextJourBtn = document.getElementById("nextJour");
@@ -56,24 +57,25 @@ let chantiersDisponibles = [];
 // === CHARGEMENT FIREBASE ===
 async function chargerDepuisFirebase() {
   const dbRef = ref(db);
+
   const snapEmp = await get(child(dbRef, "employes"));
   employesParMetier = snapEmp.exists() ? snapEmp.val() : {};
 
   const snapCh = await get(child(dbRef, "chantiers"));
   chantiersDisponibles = snapCh.exists() ? snapCh.val() : [];
 
-  // ✅ Tri intelligent des chantiers (AF25/xxxx)
+  const snapPl = await get(child(dbRef, "planning"));
+  planning = snapPl.exists() ? snapPl.val() : {};
+
+  // Tri AF intelligent
   chantiersDisponibles.sort((a, b) => {
     const numA = parseInt(a.match(/AF\s*\d{2}\/(\d+)/)?.[1] || 99999);
     const numB = parseInt(b.match(/AF\s*\d{2}\/(\d+)/)?.[1] || 99999);
     return numA - numB;
   });
-
-  const snapPl = await get(child(dbRef, "planning"));
-  planning = snapPl.exists() ? snapPl.val() : {};
 }
 
-// === FONCTIONS UTILES ===
+// === FORMATAGE DATE FR ===
 function formaterDateFr(date) {
   return date.toLocaleDateString("fr-FR", {
     weekday: "long",
@@ -88,28 +90,39 @@ function majDateEtTableau() {
   genererTableauPlanning(dateCourante);
 }
 
-function chargerListe(select, data) {
-  select.innerHTML = '<option value="">-- Sélectionner --</option>';
-  data.forEach(item => {
-    const o = document.createElement("option");
-    o.value = item;
-    o.textContent = item;
-    select.appendChild(o);
-  });
-}
-
+// === MISE À JOUR DES LISTES AVEC FILTRE (FIN EMPLOYÉ/CHANTIER) ===
 function chargerEmployesPourMetier() {
-  chargerListe(employeSelect, employesParMetier[metierInput.value] || []);
+  const metier = metierInput.value;
+  const dateCible = formatDateLocale(dateCourante);
+
+  const liste = (employesParMetier[metier] || []).filter(e => {
+    const fin = planning.finEmploye?.[metier]?.[e];
+    return !fin || fin > dateCible;
+  });
+
+  chargerListe(employeSelect, liste);
 }
 
 function chargerChantiers() {
-  // ✅ Trie avant affichage
-  const chantiersTries = [...chantiersDisponibles].sort((a, b) => {
-    const numA = parseInt(a.match(/AF\s*\d{2}\/(\d+)/)?.[1] || 99999);
-    const numB = parseInt(b.match(/AF\s*\d{2}\/(\d+)/)?.[1] || 99999);
-    return numA - numB;
+  const dateCible = formatDateLocale(dateCourante);
+
+  const liste = chantiersDisponibles.filter(c => {
+    const fin = planning.finChantier?.[c];
+    return !fin || fin > dateCible;
   });
-  chargerListe(chantierSelect, chantiersTries);
+
+  chargerListe(chantierSelect, liste);
+}
+
+// === OUTIL CHARGER LISTE ===
+function chargerListe(select, data) {
+  select.innerHTML = '<option value="">-- Sélectionner --</option>';
+  data.forEach(x => {
+    const o = document.createElement("option");
+    o.value = x;
+    o.textContent = x;
+    select.appendChild(o);
+  });
 }
 
 metierInput.addEventListener("change", chargerEmployesPourMetier);
@@ -123,27 +136,36 @@ ajouterEmployeBtn.addEventListener("click", async () => {
   if (employesParMetier[metier].includes(nom)) return alert("Déjà existant !");
   employesParMetier[metier].push(nom);
   await set(ref(db, `employes/${metier}`), employesParMetier[metier]);
+  nouvelEmployeInput.value = "";
   chargerEmployesPourMetier();
 });
 
-// === SUPPRESSION EMPLOYÉ ===
+// === SUPPRESSION EMPLOYÉ (AVEC DATE DE FIN) ===
 supprimerEmployeBtn.addEventListener("click", async () => {
   const metier = metierInput.value;
   const nom = employeSelect.value;
   if (!nom) return alert("Sélectionne un employé à supprimer !");
-  employesParMetier[metier] = employesParMetier[metier].filter(e => e !== nom);
-  await set(ref(db, `employes/${metier}`), employesParMetier[metier]);
-  chargerEmployesPourMetier();
+
+  const dateFin = formatDateLocale(new Date());
+
+  if (!planning.finEmploye) planning.finEmploye = {};
+  if (!planning.finEmploye[metier]) planning.finEmploye[metier] = {};
+
+  planning.finEmploye[metier][nom] = dateFin;
+
+  await set(ref(db, "planning"), planning);
+
+  alert(`ℹ️ ${nom} ne s'affichera plus après le ${dateFin}`);
+  majDateEtTableau();
 });
 
-// === AJOUT / SUPPRESSION CHANTIER ===
+// === AJOUT CHANTIER ===
 ajouterChantierBtn.addEventListener("click", async () => {
   const nom = nouveauChantierInput.value.trim();
   if (!nom) return alert("Entre un nom !");
   if (chantiersDisponibles.includes(nom)) return alert("Existe déjà !");
   chantiersDisponibles.push(nom);
 
-  // ✅ Trie directement après ajout
   chantiersDisponibles.sort((a, b) => {
     const numA = parseInt(a.match(/AF\s*\d{2}\/(\d+)/)?.[1] || 99999);
     const numB = parseInt(b.match(/AF\s*\d{2}\/(\d+)/)?.[1] || 99999);
@@ -151,143 +173,169 @@ ajouterChantierBtn.addEventListener("click", async () => {
   });
 
   await set(ref(db, "chantiers"), chantiersDisponibles);
+  nouveauChantierInput.value = "";
   chargerChantiers();
 });
 
+// === SUPPRESSION CHANTIER (DATE DE FIN) ===
 supprimerChantierBtn.addEventListener("click", async () => {
   const nom = chantierSelect.value;
   if (!nom) return alert("Sélectionne un chantier !");
-  chantiersDisponibles = chantiersDisponibles.filter(c => c !== nom);
-  await set(ref(db, "chantiers"), chantiersDisponibles);
-  chargerChantiers();
+
+  const dateFin = formatDateLocale(new Date());
+
+  if (!planning.finChantier) planning.finChantier = {};
+  planning.finChantier[nom] = dateFin;
+
+  await set(ref(db, "planning"), planning);
+
+  alert(`ℹ️ Le chantier "${nom}" ne sera plus proposé après le ${dateFin}`);
+  majDateEtTableau();
 });
 
-// === AJOUT AFFECTATION MULTI-CHANTIERS ===
+// === AJOUT AFFECTATION (MULTI) ===
 document.getElementById("ajouter").addEventListener("click", async () => {
   const date = formatDateLocale(dateInput.value);
   const metier = metierInput.value;
   const employe = employeSelect.value;
   const chantier = chantierSelect.value;
-  if (!date || !metier || !employe || !chantier) return alert("Remplis tous les champs !");
+
+  if (!date || !metier || !employe || !chantier)
+    return alert("Remplis tous les champs !");
+
   if (!planning[date]) planning[date] = {};
   if (!planning[date][metier]) planning[date][metier] = {};
-  if (!Array.isArray(planning[date][metier][employe])) planning[date][metier][employe] = [];
-  if (!planning[date][metier][employe].includes(chantier)) planning[date][metier][employe].push(chantier);
+  if (!Array.isArray(planning[date][metier][employe]))
+    planning[date][metier][employe] = [];
+
+  if (!planning[date][metier][employe].includes(chantier))
+    planning[date][metier][employe].push(chantier);
+
   await set(ref(db, "planning"), planning);
   majDateEtTableau();
 });
 
-// === SUPPRESSION D'UN CHANTIER ===
+// === SUPPRIMER CHANTIER POUR 1 JOUR ===
 supprimerChantierJourBtn.addEventListener("click", async () => {
   const date = formatDateLocale(dateInput.value);
   const metier = metierInput.value;
   const employe = employeSelect.value;
   const chantier = chantierSelect.value;
-  if (!date || !metier || !employe || !chantier) return alert("Remplis tous les champs !");
-  const chantiers = planning[date]?.[metier]?.[employe];
-  if (!chantiers) return alert("Aucune affectation trouvée !");
-  if (Array.isArray(chantiers)) {
-    planning[date][metier][employe] = chantiers.filter(c => c !== chantier);
-    if (planning[date][metier][employe].length === 0) delete planning[date][metier][employe];
-  } else if (chantiers === chantier) delete planning[date][metier][employe];
+
+  const ch = planning[date]?.[metier]?.[employe];
+  if (!ch) return alert("Aucune affectation !");
+  
+  if (Array.isArray(ch)) {
+    planning[date][metier][employe] = ch.filter(x => x !== chantier);
+    if (planning[date][metier][employe].length === 0)
+      delete planning[date][metier][employe];
+  }
+
   await set(ref(db, "planning"), planning);
-  alert("🗑️ Chantier supprimé !");
+  alert("🗑️ Chantier retiré !");
   majDateEtTableau();
 });
 
-// === AJOUT CONGÉ ===
+// === CONGE ===
 ajouterCongeBtn.addEventListener("click", async () => {
   const date = formatDateLocale(dateInput.value);
   const metier = metierInput.value;
   const employe = employeSelect.value;
-  const duree = prompt("🗓️ Nombre de jours de congé ?", "1");
-  const nbJours = parseInt(duree);
-  if (!date || !metier || !employe || isNaN(nbJours)) return alert("Champs invalides !");
-  for (let i = 0; i < nbJours; i++) {
-    const jour = new Date(date);
-    jour.setDate(jour.getDate() + i);
-    const jourStr = formatDateLocale(jour);
-    if (!planning[jourStr]) planning[jourStr] = {};
-    if (!planning[jourStr][metier]) planning[jourStr][metier] = {};
-    planning[jourStr][metier][employe] = "CONGÉ 🌴";
+
+  const nb = parseInt(prompt("🗓️ Nombre de jours ?", "1"));
+  if (!nb) return;
+
+  for (let i = 0; i < nb; i++) {
+    const d = new Date(date);
+    d.setDate(d.getDate() + i);
+    const j = formatDateLocale(d);
+
+    if (!planning[j]) planning[j] = {};
+    if (!planning[j][metier]) planning[j][metier] = {};
+    planning[j][metier][employe] = "CONGÉ 🌴";
   }
+
   await set(ref(db, "planning"), planning);
   majDateEtTableau();
 });
 
-// === AJOUT ARRÊT MALADIE ===
+// === MALADIE ===
 ajouterMaladieBtn.addEventListener("click", async () => {
   const date = formatDateLocale(dateInput.value);
   const metier = metierInput.value;
   const employe = employeSelect.value;
-  const duree = prompt("🩹 Nombre de jours d'arrêt maladie ?", "1");
-  const nbJours = parseInt(duree);
-  if (!date || !metier || !employe || isNaN(nbJours)) return alert("Champs invalides !");
-  for (let i = 0; i < nbJours; i++) {
-    const jour = new Date(date);
-    jour.setDate(jour.getDate() + i);
-    const jourStr = formatDateLocale(jour);
-    if (!planning[jourStr]) planning[jourStr] = {};
-    if (!planning[jourStr][metier]) planning[jourStr][metier] = {};
-    planning[jourStr][metier][employe] = "ARRÊT 🚑";
+
+  const nb = parseInt(prompt("🩹 Jours maladie ?", "1"));
+  if (!nb) return;
+
+  for (let i = 0; i < nb; i++) {
+    const d = new Date(date);
+    d.setDate(d.getDate() + i);
+    const j = formatDateLocale(d);
+
+    if (!planning[j]) planning[j] = {};
+    if (!planning[j][metier]) planning[j][metier] = {};
+    planning[j][metier][employe] = "ARRÊT 🚑";
   }
+
   await set(ref(db, "planning"), planning);
-  alert("🚑 Arrêt maladie enregistré !");
   majDateEtTableau();
 });
 
-// === TABLEAU ===
+// === TABLEAU PLANNING ===
 function genererTableauPlanning(dateCible) {
   const dateStr = formatDateLocale(dateCible);
   planningTable.innerHTML = "";
+
   const table = document.createElement("table");
   const thead = document.createElement("thead");
   const tbody = document.createElement("tbody");
 
-  const trHead = document.createElement("tr");
+  const trH = document.createElement("tr");
   Object.keys(employesParMetier).forEach(m => {
     const th = document.createElement("th");
     th.textContent = m.toUpperCase();
-    trHead.appendChild(th);
+    trH.appendChild(th);
   });
-  thead.appendChild(trHead);
+  thead.appendChild(trH);
 
-  const nb = Math.max(...Object.values(employesParMetier).map(l => l.length || 0));
+  const nb = Math.max(...Object.values(employesParMetier).map(L => L.length));
 
   for (let i = 0; i < nb; i++) {
     const tr = document.createElement("tr");
+
     Object.keys(employesParMetier).forEach(m => {
+      let e = employesParMetier[m]?.[i];
+      const fin = planning.finEmploye?.[m]?.[e];
+
+      // Employé supprimé après cette date
+      if (fin && fin <= dateStr) e = null;
+
       const td = document.createElement("td");
-      const e = employesParMetier[m]?.[i];
+
       if (e) {
         const ch = planning[dateStr]?.[m]?.[e];
+
         if (!ch) {
           td.textContent = e;
         } else {
-          td.classList.remove("checked", "conge", "maladie");
-          const value = Array.isArray(ch) && ch.length === 1 && (ch[0].includes("CONGÉ") || ch[0].includes("ARRÊT"))
-            ? ch[0]
-            : ch;
+          td.classList.add("checked");
 
-          if (Array.isArray(value)) {
-            td.classList.add("checked");
-            // ✅ Saut de ligne ajouté entre le nom et les chantiers
-            td.innerHTML = `<strong>${e}</strong><br>${value.join("<br>")}`;
-          } else if (typeof value === "string" && value.includes("CONGÉ")) {
+          if (Array.isArray(ch)) {
+            td.innerHTML = `<strong>${e}</strong><br>${ch.join("<br>")}`;
+          } else if (typeof ch === "string" && ch.includes("CONGÉ")) {
             td.classList.add("conge");
             td.innerHTML = `<strong>${e}</strong><br>CONGÉ 🌴`;
-          } else if (typeof value === "string" && value.includes("ARRÊT")) {
+          } else if (typeof ch === "string" && ch.includes("ARRÊT")) {
             td.classList.add("maladie");
             td.innerHTML = `<strong>${e}</strong><br>ARRÊT 🚑`;
-          } else {
-            td.classList.add("checked");
-            // ✅ Saut de ligne ajouté ici aussi
-            td.innerHTML = `<strong>${e}</strong><br>${value}`;
           }
         }
       }
+
       tr.appendChild(td);
     });
+
     tbody.appendChild(tr);
   }
 
@@ -296,28 +344,28 @@ function genererTableauPlanning(dateCible) {
   planningTable.appendChild(table);
 }
 
-
 // === NAVIGATION ===
-nextJourBtn.addEventListener("click", () => { dateCourante.setDate(dateCourante.getDate() + 1); majDateEtTableau(); });
-prevJourBtn.addEventListener("click", () => { dateCourante.setDate(dateCourante.getDate() - 1); majDateEtTableau(); });
+nextJourBtn.addEventListener("click", () => {
+  dateCourante.setDate(dateCourante.getDate() + 1);
+  majDateEtTableau();
+});
+prevJourBtn.addEventListener("click", () => {
+  dateCourante.setDate(dateCourante.getDate() - 1);
+  majDateEtTableau();
+});
 
-// === EXPORT / IMPRIMER LE PLANNING ===
+// === IMPRIMER / EXPORT PDF ===
 document.getElementById("exportPDF").addEventListener("click", () => {
-  // 🧾 1. Sauvegarde d'abord les données dans le localStorage
   localStorage.setItem("planningHTML", document.querySelector(".planning-container").innerHTML);
   localStorage.setItem("planningDate", dateAffichee.textContent);
 
-  // 🗓️ 2. Date ISO propre (format YYYY-MM-DD) pour le calcul de la semaine
   const dateISO = dateCourante.toISOString().split("T")[0];
   localStorage.setItem("planningDateISO", dateISO);
 
-  // 🖨️ 3. Ouvre la page d’impression APRES la sauvegarde
   window.open("print.html", "_blank");
 });
 
-
-
-// === SYNC FIREBASE ===
+// === FIREBASE SYNC ===
 onValue(ref(db, "planning"), s => {
   if (s.exists()) {
     planning = s.val();
@@ -330,4 +378,5 @@ await chargerDepuisFirebase();
 chargerEmployesPourMetier();
 chargerChantiers();
 majDateEtTableau();
+
 retourBtn.addEventListener("click", () => (window.location.href = "index.html"));
