@@ -291,45 +291,55 @@ function genererTableauPlanning(dateCible) {
   const thead = document.createElement("thead");
   const tbody = document.createElement("tbody");
 
-  const trH = document.createElement("tr");
+  // 🔥 Étape 1 : construire une liste ACTIVE et COMPACTE
+  let actifs = {};
   Object.keys(employesParMetier).forEach(m => {
+    actifs[m] = (employesParMetier[m] || []).filter(nom => {
+      const fin = planning.finEmploye?.[m]?.[nom];
+      return !fin || fin > dateStr;
+    });
+  });
+
+  // === EN-TÊTES ===
+  const trH = document.createElement("tr");
+  Object.keys(actifs).forEach(m => {
     const th = document.createElement("th");
     th.textContent = m.toUpperCase();
     trH.appendChild(th);
   });
   thead.appendChild(trH);
 
-  const nb = Math.max(...Object.values(employesParMetier).map(L => L.length));
+  // === Nombre de lignes basé sur la LISTE ACTIVE ===
+  const nb = Math.max(...Object.values(actifs).map(L => L.length));
 
+  // === LIGNES ===
   for (let i = 0; i < nb; i++) {
     const tr = document.createElement("tr");
 
-    Object.keys(employesParMetier).forEach(m => {
-      let e = employesParMetier[m]?.[i];
-      const fin = planning.finEmploye?.[m]?.[e];
-
-      // Employé supprimé après cette date
-      if (fin && fin <= dateStr) e = null;
-
+    Object.keys(actifs).forEach(m => {
       const td = document.createElement("td");
+      const e = actifs[m][i]; // 🔥 COMPACT, SANS TROU
 
-      if (e) {
-        const ch = planning[dateStr]?.[m]?.[e];
+      if (!e) {
+        tr.appendChild(td);
+        return;
+      }
 
-        if (!ch) {
-          td.textContent = e;
-        } else {
-          td.classList.add("checked");
+      const ch = planning[dateStr]?.[m]?.[e];
 
-          if (Array.isArray(ch)) {
-            td.innerHTML = `<strong>${e}</strong><br>${ch.join("<br>")}`;
-          } else if (typeof ch === "string" && ch.includes("CONGÉ")) {
-            td.classList.add("conge");
-            td.innerHTML = `<strong>${e}</strong><br>CONGÉ 🌴`;
-          } else if (typeof ch === "string" && ch.includes("ARRÊT")) {
-            td.classList.add("maladie");
-            td.innerHTML = `<strong>${e}</strong><br>ARRÊT 🚑`;
-          }
+      if (!ch) {
+        td.textContent = e;
+      } else {
+        td.classList.add("checked");
+
+        if (Array.isArray(ch)) {
+          td.innerHTML = `<strong>${e}</strong><br>${ch.join("<br>")}`;
+        } else if (typeof ch === "string" && ch.includes("CONGÉ")) {
+          td.classList.add("conge");
+          td.innerHTML = `<strong>${e}</strong><br>CONGÉ 🌴`;
+        } else if (typeof ch === "string" && ch.includes("ARRÊT")) {
+          td.classList.add("maladie");
+          td.innerHTML = `<strong>${e}</strong><br>ARRÊT 🚑`;
         }
       }
 
@@ -343,6 +353,7 @@ function genererTableauPlanning(dateCible) {
   table.appendChild(tbody);
   planningTable.appendChild(table);
 }
+
 
 // === NAVIGATION ===
 nextJourBtn.addEventListener("click", () => {
