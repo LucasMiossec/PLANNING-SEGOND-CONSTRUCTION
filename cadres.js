@@ -4,7 +4,7 @@ import { getDatabase, ref, get, set, child, onValue } from "https://www.gstatic.
 
 // === CONFIGURATION FIREBASE ===
 const firebaseConfig = {
-  apiKey: "TA_CLE_API",
+  apiKey: "AIzaSyCe0hFb2nlkye4oEpZiHn3dK1GjEbdEpmE",
   authDomain: "planning-segond.firebaseapp.com",
   databaseURL: "https://planning-segond-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "planning-segond",
@@ -62,22 +62,29 @@ async function chargerDepuisFirebase() {
   employesParMetier = snapEmp.exists() ? snapEmp.val() : {};
 
   const snapCh = await get(child(dbRef, "chantiers"));
-  chantiersDisponibles = snapCh.exists() ? snapCh.val() : [];
+  let rawChantiers = snapCh.exists() ? snapCh.val() : [];
 
-// 🔧 Si Firebase renvoie un objet → convertir en tableau
-if (!Array.isArray(chantiersDisponibles)) {
-  chantiersDisponibles = Object.values(chantiersDisponibles);
-}
+  // 🔧 Conversion de sécurité : force le format Tableau
+  if (rawChantiers && typeof rawChantiers === 'object' && !Array.isArray(rawChantiers)) {
+    chantiersDisponibles = Object.values(rawChantiers);
+  } else {
+    chantiersDisponibles = Array.isArray(rawChantiers) ? rawChantiers : [];
+  }
 
   const snapPl = await get(child(dbRef, "planning"));
   planning = snapPl.exists() ? snapPl.val() : {};
 
-  // Tri AF intelligent
-  chantiersDisponibles.sort((a, b) => {
-    const numA = parseInt(a.match(/AF\s*\d{2}\/(\d+)/)?.[1] || 99999);
-    const numB = parseInt(b.match(/AF\s*\d{2}\/(\d+)/)?.[1] || 99999);
-    return numA - numB;
-  });
+  // Tri AF intelligent (uniquement s'il y a des données)
+  if (chantiersDisponibles.length > 0) {
+    chantiersDisponibles.sort((a, b) => {
+      // Sécurité si 'a' ou 'b' n'est pas une chaîne de caractères
+      const strA = String(a);
+      const strB = String(b);
+      const numA = parseInt(strA.match(/AF\s*\d{2}\/(\d+)/)?.[1] || 99999);
+      const numB = parseInt(strB.match(/AF\s*\d{2}\/(\d+)/)?.[1] || 99999);
+      return numA - numB;
+    });
+  }
 }
 
 // === FORMATAGE DATE FR ===
