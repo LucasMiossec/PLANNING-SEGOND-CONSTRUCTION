@@ -64,6 +64,11 @@ async function chargerDepuisFirebase() {
   const snapCh = await get(child(dbRef, "chantiers"));
   chantiersDisponibles = snapCh.exists() ? snapCh.val() : [];
 
+// 🔧 Si Firebase renvoie un objet → convertir en tableau
+if (!Array.isArray(chantiersDisponibles)) {
+  chantiersDisponibles = Object.values(chantiersDisponibles);
+}
+
   const snapPl = await get(child(dbRef, "planning"));
   planning = snapPl.exists() ? snapPl.val() : {};
 
