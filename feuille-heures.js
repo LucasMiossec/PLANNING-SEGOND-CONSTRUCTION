@@ -133,14 +133,15 @@ function ajouterLigne(jourNom, dateJour, initData = null) {
   
   let dateStr = (dateJour instanceof Date) ? dateJour.toLocaleDateString("fr-FR") : dateJour;
 
+  // AJOUT DES ATTRIBUTS DATA-LABEL POUR LE DESIGN RESPONSIVE
   tr.innerHTML = `
     <td class="jour-label">
       <strong>${jourNom}</strong><br>
       <small class="date-cell">${dateStr}</small>
     </td>
-    <td><select class="chantier"></select></td>
-    <td><input type="number" class="h" value="${initData?.heures || 0}" step="0.5"></td>
-    <td><input type="text" class="comm-input" placeholder="..." value="${initData?.commentaire || ""}"></td>
+    <td data-label="Chantier :"><select class="chantier"></select></td>
+    <td data-label="Heures :"><input type="number" class="h" value="${initData?.heures || 0}" step="0.5" inputmode="decimal"></td>
+    <td data-label="Note :"><input type="text" class="comm-input" placeholder="..." value="${initData?.commentaire || ""}"></td>
     <td><button class="del">❌</button></td>
   `;
   
@@ -153,9 +154,12 @@ function ajouterLigne(jourNom, dateJour, initData = null) {
   });
   
   tr.querySelector(".del").addEventListener("click", () => { 
-    tr.remove(); 
-    calculerTotal(); 
-    sauvegarderDonnees(); 
+    // AJOUT D'UNE CONFIRMATION POUR ÉVITER LES ERREURS SUR MOBILE
+    if(confirm("Supprimer cette ligne ?")) {
+      tr.remove(); 
+      calculerTotal(); 
+      sauvegarderDonnees(); 
+    }
   });
   
   const newIndex = jours.indexOf(jourNom);

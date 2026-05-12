@@ -1,21 +1,29 @@
 body {
   background: #0f172a;
   color: white;
-  font-family: Arial, sans-serif;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  margin: 0;
+  padding: 0;
 }
 
-/* HEADER */
+/* HEADER FIXE */
 .top-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 15px;
+  padding: 10px 15px;
   background: #111827;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
 }
 
 .top-bar h1 {
   flex: 1;
   text-align: center;
+  font-size: 1.1rem;
+  margin: 0;
 }
 
 /* CONTAINER */
@@ -23,98 +31,143 @@ body {
   width: 95%;
   max-width: 1100px;
   margin: auto;
+  padding: 10px 0 40px 0;
 }
 
-/* FILTRES */
-.filters {
-  display: flex;
+/* FILTRES & SEMAINE (Adaptatifs) */
+.filters, .week-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 10px;
-  margin-top: 20px;
+  margin-top: 15px;
+}
+
+.week-selector {
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
 }
 
 select, input {
-  padding: 10px;
-  border-radius: 6px;
+  padding: 12px;
+  border-radius: 8px;
   border: none;
   background: #1e293b;
   color: white;
+  font-size: 16px; /* Empêche le zoom auto sur iPhone */
 }
 
-/* SEMAINE */
-.week-selector {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin: 20px 0;
-}
-
-/* TABLE */
+/* TABLEAU RESPONSIVE */
 .table-card {
   background: rgba(255,255,255,0.05);
   border-radius: 15px;
-  padding: 20px;
+  padding: 15px;
+  margin-top: 20px;
   border: 1px solid rgba(255,255,255,0.1);
-}
-
-h2 {
-  text-align: center;
-  margin-bottom: 20px;
 }
 
 table {
   width: 100%;
-  border-collapse: fixed;
-}
-
-th, td {
-  text-align: center;
-  padding: 10px;
+  border-collapse: collapse;
 }
 
 th {
   background: linear-gradient(135deg,#b60000,#ff2b2b);
+  padding: 12px;
+  text-transform: uppercase;
+  font-size: 0.8rem;
 }
 
-td {
-  border-bottom: 1px solid rgba(255,255,255,0.1);
+/* --- MODE MOBILE --- */
+@media (max-width: 650px) {
+  table, thead, tbody, th, td, tr {
+    display: block;
+  }
+  
+  thead { display: none; }
+
+  tr {
+    margin-bottom: 15px;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    padding: 10px;
+    background: rgba(255,255,255,0.02);
+  }
+
+  td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    text-align: right;
+  }
+
+  td::before {
+    content: attr(data-label); /* Utilise le label défini en JS */
+    font-weight: bold;
+    color: #94a3b8;
+    text-align: left;
+    flex: 1;
+  }
+
+  .jour-label {
+    background: #b60000;
+    margin: -10px -10px 10px -10px;
+    padding: 10px;
+    border-radius: 10px 10px 0 0;
+    color: white !important;
+    justify-content: center;
+  }
+  
+  .jour-label::before { display: none; }
+  
+  .chantier, .h, .comm-input {
+    width: 65% !important;
+  }
 }
 
-.jour-label {
-  color: #ff2b2b;
-  font-weight: bold;
-}
-
-/* TOTAL */
-.total {
-  text-align: right;
-  font-size: 18px;
+/* BOUTONS JOURS EN GRILLE */
+#day-buttons {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
   margin-top: 10px;
 }
 
+@media (max-width: 450px) {
+  #day-buttons { grid-template-columns: repeat(3, 1fr); }
+}
+
+.btn-day {
+  background: #1e293b;
+  color: white;
+  padding: 10px;
+  border-radius: 6px;
+  font-weight: bold;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.btn-day:active { background: #b60000; }
+
 /* ACTIONS */
 .actions {
+  margin-top: 25px;
   display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin: 20px;
+  flex-direction: column;
+  gap: 15px;
 }
 
-button {
-  padding: 10px 15px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: bold;
+#btn-pdf { 
+    background: orange; 
+    color: black; 
+    padding: 15px; 
+    font-size: 1rem;
 }
 
-#add-row { background:#334155; color:white; }
-#btn-pdf { background:orange; }
-#btn-mail { background:#ff2b2b; color:white; }
-
-/* --- AJOUTE OU MODIFIE CES LIGNES --- */
-
-/* On force le conteneur à prendre toute la place en mode PDF */
+/* PRINT */
 @media print {
+  /* Garde tes styles print d'origine ici */
+
   @page {
     size: A4 landscape;
     margin: 0.5cm; /* Marges papier minimales */

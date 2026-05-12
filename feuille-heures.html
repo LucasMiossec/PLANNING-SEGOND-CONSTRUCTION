@@ -3,24 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <title>Feuille d'heures - Segond</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <link rel="stylesheet" href="feuille-heures.css">
-
-  <!-- PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 
 <body>
 
 <div class="top-bar">
-  <button onclick="window.location.href='employes.html'">⬅ Retour</button>
-  <h1>🧾 Feuille d'heures</h1>
+  <button onclick="window.location.href='employes.html'">⬅</button>
+  <h1>🧾 Heures Segond</h1>
 </div>
 
 <div class="container">
 
-  <!-- FILTRES -->
   <div class="filters">
     <select id="metier">
       <option value="">-- Métier --</option>
@@ -36,18 +32,14 @@
     </select>
   </div>
 
-  <!-- SEMAINE -->
   <div class="week-selector">
     <button id="prev-week">⬅</button>
     <input type="date" id="week-date">
     <button id="next-week">➡</button>
   </div>
 
-  <!-- TABLE PDF -->
   <div class="table-card" id="pdf-area">
-
     <h2>RAPPORT D'ACTIVITÉ</h2>
-
     <table>
       <thead>
         <tr>
@@ -58,36 +50,29 @@
           <th></th>
         </tr>
       </thead>
-
       <tbody id="tbody"></tbody>
     </table>
-
-    <div class="total">
-      Total : <span id="total-h">0</span> h
-    </div>
-
+    <div class="total">Total : <span id="total-h">0</span> h</div>
   </div>
 
-  <!-- ACTIONS -->
   <div class="actions">
-    <div class="add-row-container" style="margin-top: 15px; text-align: center;">
-  <p style="margin-bottom: 8px; font-weight: bold;">Ajouter une ligne pour :</p>
-  <div id="day-buttons" style="display: flex; gap: 5px; justify-content: center; flex-wrap: wrap;">
-    <button class="btn-day" data-day="Lundi">Lun</button>
-    <button class="btn-day" data-day="Mardi">Mar</button>
-    <button class="btn-day" data-day="Mercredi">Mer</button>
-    <button class="btn-day" data-day="Jeudi">Jeu</button>
-    <button class="btn-day" data-day="Vendredi">Ven</button>
-    <button class="btn-day" data-day="Samedi">Sam</button>
-    <button class="btn-day" data-day="Dimanche">Dim</button>
-  </div>
-</div>
-    <button id="btn-pdf">📄 PDF</button>
+    <div style="text-align: center;">
+      <p style="margin-bottom: 8px; font-weight: bold;">Ajouter une ligne :</p>
+      <div id="day-buttons">
+        <button class="btn-day" data-day="Lundi">Lun</button>
+        <button class="btn-day" data-day="Mardi">Mar</button>
+        <button class="btn-day" data-day="Mercredi">Mer</button>
+        <button class="btn-day" data-day="Jeudi">Jeu</button>
+        <button class="btn-day" data-day="Vendredi">Ven</button>
+        <button class="btn-day" data-day="Samedi">Sam</button>
+        <button class="btn-day" data-day="Dimanche">Dim</button>
+      </div>
+    </div>
+    <button id="btn-pdf">📄 GÉNÉRER PDF</button>
   </div>
 
 </div>
 
 <script type="module" src="feuille-heures.js"></script>
-
 </body>
 </html>
