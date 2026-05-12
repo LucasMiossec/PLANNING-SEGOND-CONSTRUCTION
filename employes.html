@@ -7,12 +7,14 @@
   <link rel="stylesheet" href="employes.css">
 </head>
 <body>
+
   <!-- 🔙 BOUTON RETOUR -->
   <div class="top-bar">
     <button id="retour">⬅ Retour</button>
     <h1>👷 Mon planning</h1>
   </div>
 
+  <!-- 🧾 FORM -->
   <div class="form">
     <label for="metier">Corps d'état :</label>
     <select id="metier">
@@ -32,19 +34,24 @@
     <button id="voirPlanning">Voir mon planning</button>
   </div>
 
+  <!-- 📅 PLANNING -->
   <div class="planning-container">
     <h3 id="titreSemaine" style="display:flex; align-items:center; gap:8px; justify-content:center;">
       📅 Semaine du <span id="periodeSemaine"></span>
-      <button id="prevSemaine" class="navJour" aria-label="Semaine précédente">◀</button>
-      <button id="nextSemaine" class="navJour" aria-label="Semaine suivante">▶</button>
+      <button id="prevSemaine" class="navJour">◀</button>
+      <button id="nextSemaine" class="navJour">▶</button>
     </h3>
 
     <div id="planningContainer" class="planning"></div>
 
-    <!-- 🖨️ BOUTON EXPORT / IMPRESSION -->
+    <!-- 🖨️ EXPORT -->
     <button id="exportPDF" class="print-btn">🖨️ Imprimer / Exporter en PDF</button>
+
+    <!-- 📝 NOUVEAU BOUTON -->
+    <button id="goFeuilleHeures" class="print-btn">📝 Remplir ma feuille d’heures</button>
   </div>
 
   <script type="module" src="employes.js"></script>
+
 </body>
 </html>

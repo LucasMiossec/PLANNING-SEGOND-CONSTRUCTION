@@ -86,7 +86,10 @@ async function chargerDepuisFirebase() {
     });
   }
 }
-
+// === REDIRECTION ADMIN ===
+document.getElementById("btn-admin-link").addEventListener("click", () => {
+  window.location.href = "admin.html";
+});
 // === FORMATAGE DATE FR ===
 function formaterDateFr(date) {
   return date.toLocaleDateString("fr-FR", {

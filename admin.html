@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Console Admin - Segond</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="feuille-heures.css"> <style>
+    .admin-container { width: 95%; margin: auto; padding: 20px; }
+    .card-employe { background: rgba(255,255,255,0.05); margin-bottom: 30px; padding: 15px; border-radius: 8px; border-left: 5px solid #b60000; }
+    .status-ok { color: #2ecc71; font-weight: bold; }
+    .status-none { color: #e74c3c; font-style: italic; }
+  </style>
+</head>
+<body>
+
+<div class="top-bar">
+  <button onclick="window.location.href='index.html'">⬅ Accueil</button>
+  <h1>📊 Récapitulatif Direction</h1>
+</div>
+
+<div class="admin-container">
+  <div class="week-selector">
+    <label>Semaine du : </label>
+    <button id="prev-week">⬅</button>
+    <input type="date" id="week-date">
+    <button id="next-week">➡</button>
+    <button id="btn-refresh" style="background:#b60000; margin-left:10px;">🔄 Actualiser</button>
+  </div>
+
+  <div id="admin-content">
+    <p style="text-align:center;">Sélectionnez une semaine pour voir les rapports.</p>
+  </div>
+</div>
+
+<script type="module" src="admin.js"></script>
+</body>
+</html>
