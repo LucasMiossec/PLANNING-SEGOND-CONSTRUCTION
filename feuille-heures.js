@@ -26,30 +26,57 @@ const employeSelect = document.getElementById("employe");
 
 let employesParMetier = {};
 let chantiersDisponibles = [];
-let planning = {}; 
+let planningGlobal = {}; // Pour stocker les dates de fin
 let dateCourante = new Date();
 const jours = ["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"];
 
 // ================= SYNC INITIALE FIREBASE =================
 onValue(ref(db), (snap) => {
   const data = snap.val() || {};
+  
+  // Stockage du planning pour filtrer les anciens employés (comme cadres.js)
+  planningGlobal = data.planning || {};
+
   if (data.chantiers) {
     chantiersDisponibles = Array.isArray(data.chantiers) ? data.chantiers : Object.values(data.chantiers);
     rafraichirSelectsChantiers();
   }
-  if (data.planning) planning = data.planning;
+
   if (data.employes) {
     employesParMetier = data.employes;
-    const mSaved = localStorage.getItem("metier");
-    const eSaved = localStorage.getItem("employe");
-    if(mSaved) metierSelect.value = mSaved;
     chargerEmployes(); 
-    if(eSaved) {
-        employeSelect.value = eSaved;
-        chargerDonneesEmploye();
-    }
   }
 });
+
+// ================= CHARGER EMPLOYÉS (AVEC LOGIQUE CADRES.JS) =================
+function chargerEmployes() {
+  const metier = metierSelect.value;
+  const dateAujourdhui = new Date().toISOString().split('T')[0];
+  
+  employeSelect.innerHTML = `<option value="">-- Employé --</option>`;
+
+  if (metier && employesParMetier[metier]) {
+    let list = Array.isArray(employesParMetier[metier]) ? employesParMetier[metier] : Object.values(employesParMetier[metier]);
+    
+    // FILTRAGE : On ne garde que ceux qui n'ont pas de date de fin ou une date future
+    const actifs = list.filter(e => {
+      const dateFin = planningGlobal.finEmploye?.[metier]?.[e];
+      return !dateFin || dateFin > dateAujourdhui;
+    });
+
+    // Suppression des doublons et tri
+    const uniques = [...new Set(actifs)];
+    
+    uniques.sort().forEach(e => {
+      if (e && e.trim() !== "") {
+        const opt = document.createElement("option");
+        opt.value = e;
+        opt.textContent = e;
+        employeSelect.appendChild(opt);
+      }
+    });
+  }
+}
 
 // ================= SAUVEGARDE ET CHARGEMENT =================
 
@@ -76,7 +103,7 @@ async function chargerDonneesEmploye() {
   const lundiDate = getLundi(dateCourante);
   const lundiKey = lundiDate.toISOString().split('T')[0];
   
-  if (!emp || emp === "") {
+  if (!emp || emp === "" || emp === "-- Employé --") {
     tbody.innerHTML = "";
     totalH.textContent = "0";
     return;
@@ -89,7 +116,6 @@ async function chargerDonneesEmploye() {
   if (data && data.length > 0) {
     data.forEach(ln => restaurerLigne(ln));
   } else {
-    // Si pas de données, on crée la structure de base
     jours.forEach((j, i) => {
       const d = new Date(lundiDate);
       d.setDate(lundiDate.getDate() + i);
@@ -105,13 +131,7 @@ function ajouterLigne(jourNom, dateJour, initData = null) {
   const tr = document.createElement("tr");
   tr.dataset.jour = jourNom;
   
-  // Formatage propre de la date
-  let dateStr = "";
-  if (dateJour instanceof Date) {
-    dateStr = dateJour.toLocaleDateString("fr-FR");
-  } else {
-    dateStr = dateJour; // Déjà un string
-  }
+  let dateStr = (dateJour instanceof Date) ? dateJour.toLocaleDateString("fr-FR") : dateJour;
 
   tr.innerHTML = `
     <td class="jour-label">
@@ -128,7 +148,6 @@ function ajouterLigne(jourNom, dateJour, initData = null) {
   remplirChantiers(sel);
   if(initData) sel.value = initData.chantier;
 
-  // Events
   tr.querySelectorAll("input, select").forEach(el => {
     el.addEventListener("change", () => { calculerTotal(); sauvegarderDonnees(); });
   });
@@ -139,20 +158,16 @@ function ajouterLigne(jourNom, dateJour, initData = null) {
     sauvegarderDonnees(); 
   });
   
-  // Insertion intelligente : on cherche la position chronologique
   const newIndex = jours.indexOf(jourNom);
   const existingRows = Array.from(tbody.querySelectorAll("tr"));
   let inserted = false;
-
   for (let row of existingRows) {
-    const currentIndex = jours.indexOf(row.dataset.jour);
-    if (currentIndex > newIndex) {
+    if (jours.indexOf(row.dataset.jour) > newIndex) {
       tbody.insertBefore(tr, row);
       inserted = true;
       break;
     }
   }
-
   if (!inserted) tbody.appendChild(tr);
 }
 
@@ -188,22 +203,6 @@ function rafraichirSelectsChantiers() {
     });
 }
 
-function chargerEmployes() {
-  const metier = metierSelect.value;
-  const currentEmp = employeSelect.value;
-  employeSelect.innerHTML = `<option value="">-- Employé --</option>`;
-  const hoy = new Date().toISOString().split("T")[0];
-  if (metier && employesParMetier[metier]) {
-    const list = Array.isArray(employesParMetier[metier]) ? employesParMetier[metier] : Object.values(employesParMetier[metier]);
-    list.forEach(e => {
-        const opt = document.createElement("option");
-        opt.value = e; opt.textContent = e;
-        employeSelect.appendChild(opt);
-    });
-  }
-  if(currentEmp) employeSelect.value = currentEmp;
-}
-
 function calculerTotal() {
   let total = 0;
   document.querySelectorAll(".h").forEach(i => total += parseFloat(i.value) || 0);
@@ -212,40 +211,45 @@ function calculerTotal() {
 
 // ================= ÉVÉNEMENTS =================
 
-metierSelect.onchange = () => { localStorage.setItem("metier", metierSelect.value); chargerEmployes(); chargerDonneesEmploye(); };
-employeSelect.onchange = () => { localStorage.setItem("employe", employeSelect.value); chargerDonneesEmploye(); };
+metierSelect.onchange = () => { 
+    chargerEmployes(); 
+    chargerDonneesEmploye(); 
+};
+
+employeSelect.onchange = () => { 
+    chargerDonneesEmploye(); 
+};
 
 prevBtn.onclick = () => { 
   dateCourante.setDate(dateCourante.getDate() - 7); 
   weekInput.value = dateCourante.toISOString().split('T')[0]; 
   chargerDonneesEmploye(); 
 };
+
 nextBtn.onclick = () => { 
   dateCourante.setDate(dateCourante.getDate() + 7); 
   weekInput.value = dateCourante.toISOString().split('T')[0]; 
   chargerDonneesEmploye(); 
 };
+
 weekInput.onchange = () => { 
   dateCourante = new Date(weekInput.value); 
   chargerDonneesEmploye(); 
 };
 
-// FIX DES BOUTONS DE JOURS
 document.querySelectorAll(".btn-day").forEach(btn => {
   btn.onclick = () => {
     const jourNom = btn.getAttribute("data-day");
     const lundi = getLundi(dateCourante);
     const indexJour = jours.indexOf(jourNom);
-    
     const dateCible = new Date(lundi);
     dateCible.setDate(lundi.getDate() + indexJour);
-    
     ajouterLigne(jourNom, dateCible);
     sauvegarderDonnees();
   };
 });
 
-// ================= EXPORT PDF (MÊME PRINCIPE QUE CADRES.JS) =================
+// ================= EXPORT PDF =================
 
 document.getElementById("btn-pdf").onclick = () => {
   const employe = employeSelect.value || "Employé";
@@ -290,10 +294,6 @@ document.getElementById("btn-pdf").onclick = () => {
         <tbody>${tableHTML}</tbody>
       </table>
       <h3 style="text-align:right; color:#b60000; margin-top:20px;">TOTAL : ${totalH.textContent} H</h3>
-      <div style="margin-top:50px; display:flex; justify-content:space-between;">
-        <div style="border:1px solid #000; width:45%; height:100px; padding:10px;">Signature Employé :</div>
-        <div style="border:1px solid #000; width:45%; height:100px; padding:10px;">Signature Direction :</div>
-      </div>
     </div>
   `;
 
@@ -302,5 +302,6 @@ document.getElementById("btn-pdf").onclick = () => {
   window.open("print.html", "_blank");
 };
 
-// Initialisation au chargement
+// Initialisation
 weekInput.value = dateCourante.toISOString().split("T")[0];
+chargerDonneesEmploye();
