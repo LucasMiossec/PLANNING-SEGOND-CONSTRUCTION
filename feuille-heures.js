@@ -52,21 +52,24 @@ onValue(ref(db), (snap) => {
 function chargerEmployes() {
   const metier = metierSelect.value;
   const dateAujourdhui = new Date().toISOString().split('T')[0];
-  
+
+  // 🟢 SAUVEGARDE DE LA VALEUR ACTUELLE
+  const employeActuel = employeSelect.value;
+
   employeSelect.innerHTML = `<option value="">-- Employé --</option>`;
 
   if (metier && employesParMetier[metier]) {
-    let list = Array.isArray(employesParMetier[metier]) ? employesParMetier[metier] : Object.values(employesParMetier[metier]);
-    
-    // FILTRAGE : On ne garde que ceux qui n'ont pas de date de fin ou une date future
+    let list = Array.isArray(employesParMetier[metier]) 
+      ? employesParMetier[metier] 
+      : Object.values(employesParMetier[metier]);
+
     const actifs = list.filter(e => {
       const dateFin = planningGlobal.finEmploye?.[metier]?.[e];
       return !dateFin || dateFin > dateAujourdhui;
     });
 
-    // Suppression des doublons et tri
     const uniques = [...new Set(actifs)];
-    
+
     uniques.sort().forEach(e => {
       if (e && e.trim() !== "") {
         const opt = document.createElement("option");
@@ -75,6 +78,11 @@ function chargerEmployes() {
         employeSelect.appendChild(opt);
       }
     });
+  }
+
+  // 🟢 RESTAURATION DE L’EMPLOYÉ SI IL EXISTE ENCORE
+  if (employeActuel) {
+    employeSelect.value = employeActuel;
   }
 }
 
