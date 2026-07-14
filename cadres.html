@@ -10,6 +10,7 @@
   <div class="top-bar">
     <button id="retour">⬅ Retour</button>
     <h1>📅 Planning des cadres</h1>
+    <button id="btn-admin-link" style="background: #b60000; margin-left: auto;">📊 Console Admin</button>
   </div>
 
   <div class="form">
@@ -24,6 +25,7 @@
       <option value="peinture">Peinture</option>
       <option value="maconnerie">Maçonnerie</option>
     </select>
+    <button id="copierVeille" class="btn-copier">📋 Copier la veille</button>
 
     <label>Employé :</label>
     <select id="employe">
@@ -51,17 +53,12 @@
     <button id="ajouterMaladie" class="btn-maladie">🚑 Ajouter un arrêt maladie</button>
 
   </div>
-  <div class="top-bar">
-  <button id="retour">⬅ Retour</button>
-  <h1>📅 Planning des cadres</h1>
-  <button id="btn-admin-link" style="background: #b60000; margin-left: auto;">📊 Console Admin</button>
-</div>
+
   <div class="planning-container">
     <h3 id="titrePlanning">
       📊 Planning du <span id="dateAffichee"></span>
       <button id="prevJour" class="navJour">◀</button>
       <button id="nextJour" class="navJour">▶</button>
-      <!-- ✅ NOUVEAU BOUTON EXPORT PDF -->
       <button id="exportPDF" class="btn-export">🖨️ Imprimer / PDF</button>
     </h3>
     <div id="planningTable"></div>

@@ -28,6 +28,7 @@ function formatDateLocale(date) {
 const retourBtn = document.getElementById("retour");
 const dateInput = document.getElementById("date");
 const metierInput = document.getElementById("metier");
+const copierVeilleBtn = document.getElementById("copierVeille"); // ✅ Nouveau bouton
 const employeSelect = document.getElementById("employe");
 const nouvelEmployeInput = document.getElementById("nouvelEmploye");
 const ajouterEmployeBtn = document.getElementById("ajouterEmploye");
@@ -110,23 +111,23 @@ function chargerEmployesPourMetier() {
   const metier = metierInput.value;
   const dateCible = formatDateLocale(dateCourante);
 
-  const liste = (employesParMetier[metier] || []).filter(e => {
+  const list = (employesParMetier[metier] || []).filter(e => {
     const fin = planning.finEmploye?.[metier]?.[e];
     return !fin || fin > dateCible;
   });
 
-  chargerListe(employeSelect, liste);
+  chargerListe(employeSelect, list);
 }
 
 function chargerChantiers() {
   const dateCible = formatDateLocale(dateCourante);
 
-  const liste = chantiersDisponibles.filter(c => {
+  const list = chantiersDisponibles.filter(c => {
     const fin = planning.finChantier?.[c];
     return !fin || fin > dateCible;
   });
 
-  chargerListe(chantierSelect, liste);
+  chargerListe(chantierSelect, list);
 }
 
 // === OUTIL CHARGER LISTE ===
@@ -294,6 +295,46 @@ ajouterMaladieBtn.addEventListener("click", async () => {
   }
 
   await set(ref(db, "planning"), planning);
+  majDateEtTableau();
+});
+
+// === COPIER LA VEILLE POUR UN CORPS D'ÉTAT SPECIFIQUE (NOUVELLE FONCTIONNALITÉ) ===
+copierVeilleBtn.addEventListener("click", async () => {
+  const dateCibleStr = dateInput.value;
+  const metier = metierInput.value;
+
+  if (!dateCibleStr) {
+    return alert("⚠️ Choisis d'abord une date cible dans le formulaire !");
+  }
+
+  // Calculer la veille de la date sélectionnée
+  const dateCible = new Date(dateCibleStr);
+  const dateVeille = new Date(dateCible);
+  dateVeille.setDate(dateCible.getDate() - 1);
+
+  const veilleIso = formatDateLocale(dateVeille);
+  const cibleIso = formatDateLocale(dateCible);
+
+  // Récupérer le planning de la veille pour le métier choisi
+  const planningVeilleMetier = planning[veilleIso]?.[metier];
+
+  if (!planningVeilleMetier || Object.keys(planningVeilleMetier).length === 0) {
+    return alert(`ℹ️ Aucune affectation trouvée le ${veilleIso} pour le corps d'état "${metier.toUpperCase()}".`);
+  }
+
+  // Confirmer la copie
+  const confirmation = confirm(`📋 Voulez-vous copier le planning du ${veilleIso} vers le ${cibleIso} pour le corps d'état "${metier.toUpperCase()}" ?`);
+  if (!confirmation) return;
+
+  // Préparer la date cible dans la base locale si elle n'existe pas
+  if (!planning[cibleIso]) planning[cibleIso] = {};
+  
+  // Cloner les données de la veille vers le jour cible (remplace le planning de ce métier pour le jour cible)
+  planning[cibleIso][metier] = JSON.parse(JSON.stringify(planningVeilleMetier));
+
+  // Enregistrer sur Firebase
+  await set(ref(db, "planning"), planning);
+  alert(`✅ Planning du corps d'état "${metier.toUpperCase()}" copié avec succès !`);
   majDateEtTableau();
 });
 
