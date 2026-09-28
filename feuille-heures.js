@@ -26,7 +26,7 @@ const employeSelect = document.getElementById("employe");
 
 let employesParMetier = {};
 let chantiersDisponibles = [];
-let planningGlobal = {}; // Pour stocker les dates de fin
+let planningGlobal = {}; // Stocke planning + dates de fin (finEmploye & finChantier)
 let dateCourante = new Date();
 const jours = ["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"];
 
@@ -34,7 +34,7 @@ const jours = ["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"
 onValue(ref(db), (snap) => {
   const data = snap.val() || {};
   
-  // Stockage du planning pour filtrer les anciens employés (comme cadres.js)
+  // Stockage du planning pour filtrer les anciens employés et chantiers
   planningGlobal = data.planning || {};
 
   if (data.chantiers) {
@@ -48,14 +48,12 @@ onValue(ref(db), (snap) => {
   }
 });
 
-// ================= CHARGER EMPLOYÉS (AVEC LOGIQUE CADRES.JS) =================
+// ================= CHARGER EMPLOYÉS =================
 function chargerEmployes() {
   const metier = metierSelect.value;
-  const dateAujourdhui = new Date().toISOString().split('T')[0];
+  const dateAujourdhui = dateCourante.toISOString().split('T')[0];
 
-  // 🟢 SAUVEGARDE DE LA VALEUR ACTUELLE
   const employeActuel = employeSelect.value;
-
   employeSelect.innerHTML = `<option value="">-- Employé --</option>`;
 
   if (metier && employesParMetier[metier]) {
@@ -80,7 +78,6 @@ function chargerEmployes() {
     });
   }
 
-  // 🟢 RESTAURATION DE L’EMPLOYÉ SI IL EXISTE ENCORE
   if (employeActuel) {
     employeSelect.value = employeActuel;
   }
@@ -141,7 +138,6 @@ function ajouterLigne(jourNom, dateJour, initData = null) {
   
   let dateStr = (dateJour instanceof Date) ? dateJour.toLocaleDateString("fr-FR") : dateJour;
 
-  // AJOUT DES ATTRIBUTS DATA-LABEL POUR LE DESIGN RESPONSIVE
   tr.innerHTML = `
     <td class="jour-label">
       <strong>${jourNom}</strong><br>
@@ -154,15 +150,14 @@ function ajouterLigne(jourNom, dateJour, initData = null) {
   `;
   
   const sel = tr.querySelector(".chantier");
-  remplirChantiers(sel);
-  if(initData) sel.value = initData.chantier;
+  // Transmet la valeur initiale pour la conserver si le chantier a été supprimé
+  remplirChantiers(sel, initData?.chantier || "");
 
   tr.querySelectorAll("input, select").forEach(el => {
     el.addEventListener("change", () => { calculerTotal(); sauvegarderDonnees(); });
   });
   
   tr.querySelector(".del").addEventListener("click", () => { 
-    // AJOUT D'UNE CONFIRMATION POUR ÉVITER LES ERREURS SUR MOBILE
     if(confirm("Supprimer cette ligne ?")) {
       tr.remove(); 
       calculerTotal(); 
@@ -198,20 +193,37 @@ function getLundi(date) {
   return res;
 }
 
-function remplirChantiers(select) {
+// Remplissage avec filtrage des chantiers terminés + conservation de l'option déjà sélectionnée
+function remplirChantiers(select, valeurActuelle = "") {
+  const dateCible = dateCourante.toISOString().split('T')[0];
+  const val = valeurActuelle || select.value;
+
   select.innerHTML = `<option value="">-- Chantier --</option>`;
-  chantiersDisponibles.forEach(c => {
+
+  // 1. Filtrer les chantiers encore actifs pour la date de la semaine
+  const chantiersActifs = chantiersDisponibles.filter(c => {
+    const fin = planningGlobal.finChantier?.[c];
+    return !fin || fin > dateCible;
+  });
+
+  // 2. Si un ancien chantier était déjà sélectionné sur cette ligne, l'inclure dans la liste
+  if (val && !chantiersActifs.includes(val)) {
+    chantiersActifs.push(val);
+  }
+
+  chantiersActifs.sort().forEach(c => {
     const opt = document.createElement("option");
-    opt.value = c; opt.textContent = c;
+    opt.value = c; 
+    opt.textContent = c;
     select.appendChild(opt);
   });
+
+  select.value = val;
 }
 
 function rafraichirSelectsChantiers() {
     document.querySelectorAll(".chantier").forEach(sel => {
-        const val = sel.value;
         remplirChantiers(sel);
-        sel.value = val;
     });
 }
 
