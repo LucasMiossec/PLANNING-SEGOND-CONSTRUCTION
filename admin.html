@@ -15,22 +15,67 @@
   </header>
 
   <div class="container">
-    
-    <!-- BARRE DE NAVIGATION SEMAINE & BOUTONS -->
-    <div class="week-controls">
-      <button id="prev-week" class="btn-nav">← Semaine précédente</button>
-      <div class="picker-group">
-        <label for="week-date">Semaine du :</label>
-        <input type="date" id="week-date">
-        <span id="week-range" style="margin-left: 10px; font-weight: bold; color: #cbd5e1;"></span>
+
+    <!-- EN-TÊTE VISIBLE UNIQUEMENT À L'IMPRESSION -->
+    <div class="print-header">
+      <div>
+        <div class="ph-brand">SEGOND CONSTRUCTION</div>
+        <div class="ph-title" id="ph-title"></div>
       </div>
-      <button id="next-week" class="btn-nav">Semaine suivante →</button>
-      <button id="btn-refresh" class="btn-refresh">🔄 Actualiser</button>
-      <button id="btn-print-admin" class="btn-print" style="background-color: #059669; color: #fff; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: bold;">🖨️ Imprimer Récapitulatif</button>
+      <div class="ph-meta">
+        <div id="ph-sub"></div>
+        <div id="ph-date"></div>
+      </div>
     </div>
 
-    <!-- TABLEAU DASHBOARD SYNTHÉTIQUE -->
-    <section class="dashboard-section">
+    <!-- 1. SECTION : RÉCAPITULATIF MENSUEL ADMIN -->
+    <div class="admin-card monthly-card">
+      <div class="monthly-header-bar">
+        <h2>📅 Récapitulatif Mensuel des Heures</h2>
+        <div class="month-nav-group">
+          <button id="prevMonthBtn" class="btn-month-nav">◀ Mois Précédent</button>
+          <span id="currentMonthLabel">OCTOBRE 2026</span>
+          <button id="nextMonthBtn" class="btn-month-nav">Mois Suivant ▶</button>
+        </div>
+      </div>
+
+      <div class="table-scroll-container">
+        <table id="monthRecapTable">
+          <!-- Généré dynamiquement en JS -->
+        </table>
+      </div>
+      
+      <div class="monthly-footer-action">
+        <button id="btn-print-month" class="btn-print-pro">🖨️ Imprimer Récap Mensuel</button>
+      </div>
+    </div>
+
+    <!-- 2. SECTION : CONTRÔLES DE SEMAINE (ALIGNÉS & PRO) -->
+    <div class="admin-card week-controls-card">
+      <div class="week-controls-bar">
+        <!-- Navigation Gauche -->
+        <button id="prev-week" class="btn-pro-nav">◀ Précédente</button>
+
+        <!-- Centre : Date & Plage -->
+        <div class="week-center-group">
+          <div class="picker-group">
+            <label for="week-date">Semaine du :</label>
+            <input type="date" id="week-date">
+          </div>
+          <span id="week-range"></span>
+        </div>
+
+        <!-- Navigation & Actions Droite -->
+        <div class="week-actions-group">
+          <button id="next-week" class="btn-pro-nav">Suivante ▶</button>
+          <button id="btn-refresh" class="btn-pro-icon" title="Actualiser">🔄</button>
+          <button id="btn-print-admin" class="btn-print-pro">🖨️ Imprimer</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. TABLEAU DASHBOARD SYNTHÉTIQUE (SUIVI DES SAISIES) -->
+    <section class="dashboard-section admin-card">
       <h2>📌 Suivi des Saisies de la Semaine</h2>
       <div class="legend">
         <span class="badge badge-green">🟩 ≥ 39h (Complété)</span>
@@ -43,7 +88,7 @@
       </div>
     </section>
 
-    <!-- DÉTAILS DES FEUILLES D'HEURES -->
+    <!-- 4. DÉTAILS DES FEUILLES D'HEURES -->
     <section class="details-section">
       <h2>📋 Détail des Feuilles d'Heures</h2>
       <div id="details-container">

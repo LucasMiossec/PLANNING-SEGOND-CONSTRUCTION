@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getDatabase, ref, get, onValue } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
 // ================= CONFIGURATION FIREBASE =================
 const firebaseConfig = {
@@ -7,7 +7,7 @@ const firebaseConfig = {
   authDomain: "planning-segond.firebaseapp.com",
   databaseURL: "https://planning-segond-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "planning-segond",
-  storageBucket: "planning-segond.appspot.com",
+  storageBucket: "planning-segond.appstop.com",
   messagingSenderId: "951519078075",
   appId: "1:951519078075:web:1152d3023ed737b8afab9e"
 };
@@ -22,12 +22,15 @@ const prevBtn = document.getElementById("prev-week");
 const nextBtn = document.getElementById("next-week");
 const refreshBtn = document.getElementById("btn-refresh");
 const printBtn = document.getElementById("btn-print-admin");
+const printMonthBtn = document.getElementById("btn-print-month");
 const dashboardContainer = document.getElementById("dashboard-container");
 const detailsContainer = document.getElementById("details-container");
 
 let dateCourante = new Date();
+let moisAfficheDate = new Date(); 
 let employesParMetier = {};
 let planningGlobal = {};
+let feuillesHeuresGlobal = {}; 
 
 // ================= OUTILS DATE =================
 function getLundi(date) {
@@ -47,18 +50,86 @@ function formatDateFR(d) {
   return d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 
+function getWeekNumber(d) {
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNum = date.getUTCDay() || 7;
+  date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+}
+
+function extractEmpName(empItem) {
+  if (!empItem) return "";
+  if (typeof empItem === "string") return empItem.trim();
+  if (typeof empItem === "object") {
+    return (empItem.nom || empItem.name || empItem.prenom || Object.values(empItem)[0] || "").toString().trim();
+  }
+  return String(empItem).trim();
+}
+
+function getStatutJourAbsence(emp, metier, dateISO) {
+  if (!planningGlobal) return null;
+  const affectation = planningGlobal[dateISO]?.[metier]?.[emp] || planningGlobal[dateISO]?.[emp];
+  
+  if (typeof affectation === "string") {
+    const aff = affectation.toUpperCase();
+    if (aff.includes("CONGÉ") || aff.includes("CONGE") || aff.includes("ARRÊT") || aff.includes("ARRET") || aff.includes("MALADIE")) {
+      return "ABS";
+    }
+  }
+  return null;
+}
+
+function getHeuresAbsence(emp, metier, lundiKey) {
+  let hConge = 0;
+  let hMaladie = 0;
+  if (!planningGlobal) return { hConge, hMaladie };
+
+  const lundi = new Date(lundiKey);
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(lundi);
+    d.setDate(lundi.getDate() + i);
+    const day = d.getDay();
+    if (day === 0 || day === 6) continue;
+
+    const dateKey = formatDateISO(d);
+    const heuresJour = (day === 5) ? 7 : 8;
+    const affectation = planningGlobal[dateKey]?.[metier]?.[emp] || planningGlobal[dateKey]?.[emp];
+
+    if (typeof affectation === "string") {
+      const aff = affectation.toUpperCase();
+      if (aff.includes("CONGÉ") || aff.includes("CONGE")) hConge += heuresJour;
+      else if (aff.includes("ARRÊT") || aff.includes("ARRET") || aff.includes("MALADIE")) hMaladie += heuresJour;
+    }
+  }
+  return { hConge, hMaladie };
+}
+
+function getLignesEmployeSemaine(FH_Semaine, empKey, empName) {
+  if (!FH_Semaine) return [];
+  let dataEmp = FH_Semaine[empKey] || FH_Semaine[empName];
+  if (!dataEmp) {
+    const foundKey = Object.keys(FH_Semaine).find(k => k && k.trim().toLowerCase() === empName.trim().toLowerCase());
+    if (foundKey) dataEmp = FH_Semaine[foundKey];
+  }
+  return Array.isArray(dataEmp) ? dataEmp : (dataEmp ? Object.values(dataEmp) : []);
+}
+
 // ================= SYNC ET CHARGEMENT =================
 onValue(ref(db), (snap) => {
   const data = snap.val() || {};
   employesParMetier = data.employes || {};
   planningGlobal = data.planning || {};
+  feuillesHeuresGlobal = data.feuilles_heures || {}; 
+
   chargerDonneesSemaine();
+  chargerRecapMensuelAdmin();
 });
 
 async function chargerDonneesSemaine() {
   const lundiDate = getLundi(dateCourante);
   const lundiKey = formatDateISO(lundiDate);
-  weekInput.value = lundiKey;
+  if (weekInput) weekInput.value = lundiKey;
 
   const dimancheDate = new Date(lundiDate);
   dimancheDate.setDate(lundiDate.getDate() + 6);
@@ -67,11 +138,192 @@ async function chargerDonneesSemaine() {
     weekRangeSpan.textContent = `(Du Lundi ${formatDateFR(lundiDate)} au Dimanche ${formatDateFR(dimancheDate)})`;
   }
 
-  const snapFH = await get(ref(db, `feuilles_heures/${lundiKey}`));
-  const feuillesHeures = snapFH.val() || {};
+  const feuillesHeures = feuillesHeuresGlobal[lundiKey] || {};
 
   genererDashboard(feuillesHeures, lundiKey);
   genererDetails(feuillesHeures, lundiKey);
+}
+
+// ================= HELPERS RÉCAP MENSUEL =================
+const JOURS_SEMAINE = ["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"];
+
+function formatDateLocal(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function getFeuillesSemaine(lundiDate) {
+  return feuillesHeuresGlobal[formatDateLocal(lundiDate)]
+      || feuillesHeuresGlobal[formatDateISO(lundiDate)]
+      || {};
+}
+
+function heuresParJour(lignes, lundiDate) {
+  const map = {};
+  lignes.forEach(l => {
+    if (!l) return;
+    const h = parseFloat(l.heures) || 0;
+    const idx = JOURS_SEMAINE.indexOf(l.jour);
+    if (!h || idx === -1) return;
+    const d = new Date(lundiDate);
+    d.setDate(lundiDate.getDate() + idx);
+    const k = formatDateLocal(d);
+    map[k] = (map[k] || 0) + h;
+  });
+  return map;
+}
+
+// ================= RÉCAPITULATIF MENSUEL =================
+function chargerRecapMensuelAdmin() {
+  const tableContainer = document.getElementById("monthRecapTable");
+  const labelMois = document.getElementById("currentMonthLabel");
+  if (!tableContainer) return;
+
+  const year = moisAfficheDate.getFullYear();
+  const month = moisAfficheDate.getMonth(); 
+  const monthNames = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
+  
+  if (labelMois) {
+    labelMois.innerText = `${monthNames[month]} ${year}`.toUpperCase();
+  }
+
+  const firstDayOfMonth = new Date(year, month, 1);
+  const lastDayOfMonth = new Date(year, month + 1, 0);
+  const totalJoursMois = lastDayOfMonth.getDate();
+
+  const toLocalISO = (d) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
+
+  let semainesBlocs = [];
+  let currSem = null;
+  const joursLettres = ["D", "L", "M", "M", "J", "V", "S"];
+
+  for (let day = 1; day <= totalJoursMois; day++) {
+    const dObj = new Date(year, month, day);
+    const numSem = getWeekNumber(dObj);
+    const jsDay = dObj.getDay();
+    const letter = joursLettres[jsDay];
+    const isWeekend = (jsDay === 0 || jsDay === 6);
+
+    if (!currSem || currSem.numSem !== numSem) {
+      currSem = { numSem: numSem, jours: [] };
+      semainesBlocs.push(currSem);
+    }
+
+    currSem.jours.push({
+      dObj: dObj,
+      numDay: day,
+      letterDay: letter,
+      isWeekend: isWeekend,
+      dateISO: toLocalISO(dObj),
+      dateFR: dObj.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" })
+    });
+  }
+
+  let headerSemainesHTML = "";
+  let headerJoursLettresHTML = "";
+  let headerJoursNumHTML = "";
+
+  semainesBlocs.forEach(sem => {
+    headerSemainesHTML += `<th class="th-sem" colspan="${sem.jours.length}" style="border:1px solid #334155; padding:4px; text-align:center; background:#0f172a; color:#10b981;">SEMAINE ${sem.numSem}</th>`;
+
+    sem.jours.forEach(j => {
+      const bgHead = j.isWeekend ? "#334155" : "#1e293b";
+      const colorHead = j.isWeekend ? "#f1f5f9" : "#94a3b8";
+
+      headerJoursLettresHTML += `<th class="th-day${j.isWeekend ? ' we' : ''}" style="border:1px solid #334155; padding:3px; text-align:center; min-width:22px; background:${bgHead}; color:${colorHead}; font-weight:bold;">${j.letterDay}</th>`;
+      headerJoursNumHTML += `<th class="th-day${j.isWeekend ? ' we' : ''}" style="border:1px solid #334155; padding:3px; text-align:center; min-width:22px; background:${bgHead}; color:${colorHead}; font-weight:normal;">${j.numDay}</th>`;
+    });
+  });
+
+  let bodyHTML = "";
+
+  Object.keys(employesParMetier).forEach(metier => {
+    let rawEmployes = employesParMetier[metier];
+    if (!rawEmployes) return;
+
+    let entries = typeof rawEmployes === "object" ? Object.entries(rawEmployes) : rawEmployes.map(e => [e, e]);
+
+    entries = entries.filter(([empKey, empItem]) => {
+      const empName = extractEmpName(empItem);
+      if (!empName) return false;
+      const dateFin = planningGlobal.finEmploye?.[metier]?.[empName] || planningGlobal.finEmploye?.[empName];
+      return !dateFin || dateFin >= toLocalISO(firstDayOfMonth);
+    });
+
+    if (entries.length === 0) return;
+
+    const totalCols = totalJoursMois + 2;
+
+    bodyHTML += `
+      <tr class="row-metier" style="background:#b60000; color:#fff; font-weight:bold;">
+        <td class="td-metier" colspan="${totalCols}" style="padding:5px 8px; border:1px solid #991b1b; text-transform:uppercase; text-align:left; font-size:11px;">${metier}</td>
+      </tr>
+    `;
+
+    entries.forEach(([empKey, empItem]) => {
+      const empName = extractEmpName(empItem);
+      if (!empName) return;
+
+      let empRowHTML = `<td class="td-emp" style="border:1px solid #334155; padding:4px 8px; font-weight:bold; background:#0f172a; color:#f8fafc; position:sticky; left:0; z-index:2;">${empName}</td>`;
+      let totalMoisEmp = 0;
+
+      semainesBlocs.forEach(sem => {
+        sem.jours.forEach(j => {
+          const lundiDuJour = getLundi(j.dObj);
+          const FH_Semaine = getFeuillesSemaine(lundiDuJour);
+          const lignes = getLignesEmployeSemaine(FH_Semaine, empKey, empName);
+          const valH = heuresParJour(lignes, lundiDuJour)[j.dateISO] || 0;
+          
+          const statutAbsence = getStatutJourAbsence(empName, metier, j.dateISO);
+
+          let txtDisplay = "";
+          let textStyle = "color:#475569;";
+          let extraClass = "";
+
+          if (statutAbsence === "ABS") {
+            txtDisplay = "ABS";
+            textStyle = "font-weight:bold; color:#fbbf24;";
+            extraClass = " abs";
+          } else if (valH > 0) {
+            totalMoisEmp += valH;
+            txtDisplay = valH;
+            textStyle = "font-weight:bold; color:#10b981;";
+            extraClass = " on";
+          }
+
+          const bgCol = j.isWeekend ? "#1e293b" : "#0f172a";
+
+          empRowHTML += `<td class="td-h${j.isWeekend ? ' we' : ''}${extraClass}" style="border:1px solid #334155; text-align:center; padding:3px 1px; background:${bgCol}; ${textStyle}">${txtDisplay}</td>`;
+        });
+      });
+
+      empRowHTML += `<td class="td-total" style="border:1px solid #334155; text-align:center; font-weight:bold; background:#1e293b; color:#f8fafc; padding:4px;">${totalMoisEmp} h</td>`;
+
+      bodyHTML += `<tr>${empRowHTML}</tr>`;
+    });
+  });
+
+  tableContainer.innerHTML = `
+    <thead>
+      <tr>
+        <th class="th-emp" rowspan="3" style="border:1px solid #334155; padding:6px; text-align:left; background:#0f172a; color:#fff; position:sticky; left:0; z-index:3; width:130px;">EMPLOYÉ</th>
+        ${headerSemainesHTML}
+        <th class="th-total" rowspan="3" style="border:1px solid #334155; padding:6px; text-align:center; background:#0f172a; color:#fff; width:50px;">TOTAL</th>
+      </tr>
+      <tr>${headerJoursLettresHTML}</tr>
+      <tr>${headerJoursNumHTML}</tr>
+    </thead>
+    <tbody>
+      ${bodyHTML}
+    </tbody>
+  `;
 }
 
 // ================= 1. DASHBOARD SYNTHÉTIQUE =================
@@ -85,45 +337,61 @@ function genererDashboard(feuillesHeures, lundiKey) {
   }
 
   metiers.forEach(metier => {
-    const list = Array.isArray(employesParMetier[metier]) 
-      ? employesParMetier[metier] 
-      : Object.values(employesParMetier[metier]);
+    const rawList = employesParMetier[metier] || {};
+    const entries = typeof rawList === "object" ? Object.entries(rawList) : rawList.map(e => [e, e]);
 
-    const actifs = list.filter(e => {
-      const dateFin = planningGlobal.finEmploye?.[metier]?.[e];
-      return !dateFin || dateFin > lundiKey;
+    let listNames = [];
+
+    entries.forEach(([empKey, empItem]) => {
+      const emp = extractEmpName(empItem);
+      if (!emp) return;
+
+      const dateFin = planningGlobal.finEmploye?.[metier]?.[emp] || planningGlobal.finEmploye?.[emp];
+      if (!dateFin || dateFin >= lundiKey) {
+        listNames.push({ key: empKey, name: emp, item: empItem });
+      }
     });
 
-    const uniques = [...new Set(actifs)];
-    if (uniques.length === 0) return;
+    if (listNames.length === 0) return;
 
     const groupDiv = document.createElement("div");
     groupDiv.className = "metier-group";
 
     let tableRowsHTML = "";
 
-    uniques.sort().forEach(emp => {
-      const lignesEmp = feuillesHeures[emp] || [];
+    listNames.sort((a, b) => a.name.localeCompare(b.name)).forEach(({ key, name, item }) => {
+      const lignesEmp = getLignesEmployeSemaine(feuillesHeures, key, name);
       let totalH = 0;
 
       lignesEmp.forEach(l => {
-        totalH += parseFloat(l.heures) || 0;
+        if (l) totalH += parseFloat(l.heures) || 0;
       });
+
+      const { hConge, hMaladie } = getHeuresAbsence(name, metier, lundiKey);
+      const totalAvecAbsences = totalH + hConge + hMaladie;
 
       let statusClass = "status-white";
       let statusText = "Non rempli (0h)";
 
-      if (totalH >= 39) {
+      if (totalAvecAbsences >= 39) {
         statusClass = "status-green";
         statusText = "Complété";
-      } else if (totalH > 0) {
+      } else if (totalAvecAbsences > 0) {
         statusClass = "status-yellow";
         statusText = "En cours";
       }
 
+      let detailsAbsence = "";
+      if (hConge > 0 || hMaladie > 0) {
+        let abs = [];
+        if (hConge > 0) abs.push(`${hConge}h congé 🌴`);
+        if (hMaladie > 0) abs.push(`${hMaladie}h maladie 🚑`);
+        detailsAbsence = `<br><small style="color: #94a3b8; font-weight: normal;">(${abs.join(", ")})</small>`;
+      }
+
       tableRowsHTML += `
         <tr>
-          <td class="emp-name"><b>${emp}</b></td>
+          <td class="emp-name"><b>${name}</b>${detailsAbsence}</td>
           <td class="text-center"><b>${totalH} h</b></td>
           <td class="text-center"><span class="status-badge ${statusClass}">${statusText}</span></td>
         </tr>
@@ -156,19 +424,18 @@ function genererDetails(feuillesHeures, lundiKey) {
 
   let tousLesEmployesActifs = [];
   Object.keys(employesParMetier).forEach(metier => {
-    let list = Array.isArray(employesParMetier[metier]) 
-      ? employesParMetier[metier] 
-      : Object.values(employesParMetier[metier]);
+    let rawList = employesParMetier[metier] || {};
+    let entries = typeof rawList === "object" ? Object.entries(rawList) : rawList.map(e => [e, e]);
 
-    list.forEach(e => {
-      const dateFin = planningGlobal.finEmploye?.[metier]?.[e];
-      if (!dateFin || dateFin > lundiKey) {
-        tousLesEmployesActifs.push(e);
+    entries.forEach(([empKey, item]) => {
+      const e = extractEmpName(item);
+      if (!e) return;
+      const dateFin = planningGlobal.finEmploye?.[metier]?.[e] || planningGlobal.finEmploye?.[e];
+      if (!dateFin || dateFin >= lundiKey) {
+        tousLesEmployesActifs.push({ empKey, emp: e, metier, item });
       }
     });
   });
-
-  tousLesEmployesActifs = [...new Set(tousLesEmployesActifs)];
 
   if (tousLesEmployesActifs.length === 0) {
     detailsContainer.innerHTML = `<div class="card empty-card">Aucun employé actif pour cette semaine.</div>`;
@@ -177,12 +444,13 @@ function genererDetails(feuillesHeures, lundiKey) {
 
   let auMoinsUneFeuille = false;
 
-  tousLesEmployesActifs.sort().forEach(emp => {
-    const lignes = feuillesHeures[emp] || [];
+  tousLesEmployesActifs.sort((a,b) => a.emp.localeCompare(b.emp)).forEach(({ empKey, emp, metier, item }) => {
+    const lignes = getLignesEmployeSemaine(feuillesHeures, empKey, emp);
     let totalH = 0;
 
     let rowsHTML = "";
     lignes.forEach(ln => {
+      if (!ln) return;
       const h = parseFloat(ln.heures) || 0;
       if (h > 0 || (ln.chantier && ln.chantier !== "")) {
         totalH += h;
@@ -197,14 +465,22 @@ function genererDetails(feuillesHeures, lundiKey) {
       }
     });
 
-    if (rowsHTML !== "") {
+    const { hConge, hMaladie } = getHeuresAbsence(emp, metier, lundiKey);
+
+    if (rowsHTML !== "" || hConge > 0 || hMaladie > 0) {
       auMoinsUneFeuille = true;
       const card = document.createElement("div");
       card.className = "card-emp";
+
+      let absInfo = [];
+      if (hConge > 0) absInfo.push(`${hConge}h Congé 🌴`);
+      if (hMaladie > 0) absInfo.push(`${hMaladie}h Maladie 🚑`);
+      const absText = absInfo.length > 0 ? ` | ${absInfo.join(" - ")}` : "";
+
       card.innerHTML = `
         <div class="card-header">
           <h3>👤 ${emp}</h3>
-          <span class="total-badge">Total : ${totalH} H</span>
+          <span class="total-badge">Total Travaillé : ${totalH} H${absText}</span>
         </div>
         <table class="detail-table">
           <thead>
@@ -215,7 +491,9 @@ function genererDetails(feuillesHeures, lundiKey) {
               <th style="width:30%;">Observations</th>
             </tr>
           </thead>
-          <tbody>${rowsHTML}</tbody>
+          <tbody>
+            ${rowsHTML || '<tr><td colspan="4" style="text-align:center; color:#94a3b8;">Congé / Arrêt maladie enregistré sur le planning</td></tr>'}
+          </tbody>
         </table>
       `;
       detailsContainer.appendChild(card);
@@ -227,179 +505,88 @@ function genererDetails(feuillesHeures, lundiKey) {
   }
 }
 
-// ================= 3. EXPORT / IMPRESSION PDF AVEC COULEURS DE L'APPLICATION =================
-printBtn.onclick = async () => {
-  const lundiDate = getLundi(dateCourante);
-  const lundiKey = formatDateISO(lundiDate);
-  const dimancheDate = new Date(lundiDate);
-  dimancheDate.setDate(lundiDate.getDate() + 6);
+// ================= ÉVÉNEMENTS DE NAVIGATION & IMPRESSION =================
+if (prevBtn) {
+  prevBtn.onclick = () => {
+    dateCourante.setDate(dateCourante.getDate() - 7);
+    chargerDonneesSemaine();
+  };
+}
 
-  const periodeStr = `Du Lundi ${formatDateFR(lundiDate)} au Dimanche ${formatDateFR(dimancheDate)}`;
+if (nextBtn) {
+  nextBtn.onclick = () => {
+    dateCourante.setDate(dateCourante.getDate() + 7);
+    chargerDonneesSemaine();
+  };
+}
 
-  const snapFH = await get(ref(db, `feuilles_heures/${lundiKey}`));
-  const feuillesHeures = snapFH.val() || {};
-
-  // --- HTML Synthèse avec styles de couleurs originaux ---
-  let synthHTML = "";
-  Object.keys(employesParMetier).forEach(metier => {
-    let list = Array.isArray(employesParMetier[metier]) 
-      ? employesParMetier[metier] 
-      : Object.values(employesParMetier[metier]);
-
-    const actifs = list.filter(e => {
-      const dateFin = planningGlobal.finEmploye?.[metier]?.[e];
-      return !dateFin || dateFin > lundiKey;
-    });
-
-    if (actifs.length > 0) {
-      synthHTML += `
-        <tr style="background:#1e293b; color:#10b981; font-weight:bold;">
-          <td colspan="3" style="padding:8px 12px; border:1px solid #334155; font-size:14px; text-transform:uppercase;">${metier}</td>
-        </tr>
-      `;
-      actifs.sort().forEach(emp => {
-        const lignes = feuillesHeures[emp] || [];
-        let total = 0;
-        lignes.forEach(l => total += parseFloat(l.heures) || 0);
-
-        let statusBg = "#f8fafc";
-        let statusColor = "#475569";
-        let statusBorder = "#cbd5e1";
-        let statusText = "Non rempli (0h)";
-
-        if (total >= 39) {
-          statusBg = "#dcfce7";
-          statusColor = "#15803d";
-          statusBorder = "#86efac";
-          statusText = "Complété";
-        } else if (total > 0) {
-          statusBg = "#fef9c3";
-          statusColor = "#a16207";
-          statusBorder = "#fde047";
-          statusText = "En cours";
-        }
-
-        synthHTML += `
-          <tr style="background:#fff;">
-            <td style="border:1px solid #cbd5e1; padding:8px 12px; font-weight:600; color:#0f172a;">${emp}</td>
-            <td style="border:1px solid #cbd5e1; padding:8px 12px; text-align:center; font-weight:bold; color:#0f172a;">${total} h</td>
-            <td style="border:1px solid #cbd5e1; padding:8px 12px; text-align:center;">
-              <span style="background:${statusBg}; color:${statusColor}; border:1px solid ${statusBorder}; padding:4px 10px; border-radius:12px; font-size:12px; font-weight:bold; display:inline-block;">${statusText}</span>
-            </td>
-          </tr>
-        `;
-      });
+if (weekInput) {
+  weekInput.onchange = () => {
+    if (weekInput.value) {
+      const parts = weekInput.value.split('-');
+      dateCourante = new Date(parts[0], parts[1] - 1, parts[2]);
+      chargerDonneesSemaine();
     }
-  });
+  };
+}
 
-  // --- HTML Détail des Feuilles d'Heures ---
-  let detailHTML = "";
-  
-  // Récupérer tous les employés actifs
-  let tousLesActifs = [];
-  Object.keys(employesParMetier).forEach(metier => {
-    let list = Array.isArray(employesParMetier[metier]) ? employesParMetier[metier] : Object.values(employesParMetier[metier]);
-    list.forEach(e => {
-      const dateFin = planningGlobal.finEmploye?.[metier]?.[e];
-      if (!dateFin || dateFin > lundiKey) tousLesActifs.push(e);
+if (refreshBtn) {
+  refreshBtn.onclick = () => chargerDonneesSemaine();
+}
+
+// ================= IMPRESSION =================
+function remplirEnteteImpression(mode) {
+  const titre = document.getElementById("ph-title");
+  const sub = document.getElementById("ph-sub");
+  const date = document.getElementById("ph-date");
+
+  if (mode === "month") {
+    const label = document.getElementById("currentMonthLabel")?.innerText || "";
+    if (titre) titre.textContent = "Récapitulatif mensuel des heures";
+    if (sub) sub.textContent = label;
+  } else {
+    const lundi = getLundi(dateCourante);
+    const dimanche = new Date(lundi);
+    dimanche.setDate(lundi.getDate() + 6);
+    if (titre) titre.textContent = `Suivi des heures — Semaine ${getWeekNumber(lundi)}`;
+    if (sub) sub.textContent = `Du lundi ${formatDateFR(lundi)} au dimanche ${formatDateFR(dimanche)}`;
+  }
+  if (date) {
+    date.textContent = "Imprimé le " + new Date().toLocaleDateString("fr-FR", {
+      day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit"
     });
-  });
-  tousLesActifs = [...new Set(tousLesActifs)].sort();
+  }
+}
 
-  tousLesActifs.forEach(emp => {
-    const lignes = feuillesHeures[emp] || [];
-    let rows = "";
-    let totalEmp = 0;
+function lancerImpression(mode) {
+  document.body.classList.remove("print-week-active", "print-month-active");
+  document.body.classList.add(mode === "month" ? "print-month-active" : "print-week-active");
+  remplirEnteteImpression(mode);
+  window.print();
+}
 
-    lignes.forEach(l => {
-      const h = parseFloat(l.heures) || 0;
-      if (h > 0 || (l.chantier && l.chantier !== "")) {
-        totalEmp += h;
-        rows += `
-          <tr style="background:#fff;">
-            <td style="border:1px solid #cbd5e1; padding:6px 10px;"><b>${l.jour || ""}</b> <small style="color:#64748b;">(${l.date || ""})</small></td>
-            <td style="border:1px solid #cbd5e1; padding:6px 10px; color:#0f172a;">${l.chantier || "-"}</td>
-            <td style="border:1px solid #cbd5e1; padding:6px 10px; text-align:center; font-weight:bold; color:#0f172a;">${l.heures || 0} h</td>
-            <td style="border:1px solid #cbd5e1; padding:6px 10px; color:#475569;">${l.commentaire || ""}</td>
-          </tr>
-        `;
-      }
-    });
+if (printBtn) printBtn.onclick = () => lancerImpression("week");
+if (printMonthBtn) printMonthBtn.onclick = () => lancerImpression("month");
 
-    if (rows !== "") {
-      detailHTML += `
-        <div style="margin-top:20px; page-break-inside: avoid;">
-          <div style="background:#0f172a; color:#fff; padding:8px 12px; border-radius:6px 6px 0 0; display:flex; justify-content:space-between; align-items:center;">
-            <span style="font-weight:bold; font-size:15px;">👤 ${emp}</span>
-            <span style="background:#059669; padding:3px 8px; border-radius:4px; font-weight:bold; font-size:13px;">Total : ${totalEmp} H</span>
-          </div>
-          <table style="width:100%; border-collapse:collapse; margin-top:0;">
-            <thead>
-              <tr style="background:#f1f5f9; color:#334155; font-size:12px; text-align:left;">
-                <th style="border:1px solid #cbd5e1; padding:6px 10px; width:22%;">Jour</th>
-                <th style="border:1px solid #cbd5e1; padding:6px 10px; width:38%;">Chantier</th>
-                <th style="border:1px solid #cbd5e1; padding:6px 10px; width:10%; text-align:center;">H</th>
-                <th style="border:1px solid #cbd5e1; padding:6px 10px; width:30%;">Observations</th>
-              </tr>
-            </thead>
-            <tbody>${rows}</tbody>
-          </table>
-        </div>
-      `;
-    }
-  });
+window.addEventListener("afterprint", () => {
+  document.body.classList.remove("print-week-active", "print-month-active");
+});
 
-  const printFullHTML = `
-    <div style="font-family: Arial, sans-serif; padding:15px; color:#0f172a; background:#fff;">
-      
-      <!-- EN-TÊTE PRINCIPAL -->
-      <div style="text-align:center; border-bottom:3px solid #b60000; padding-bottom:12px; margin-bottom:20px;">
-        <h1 style="color:#b60000; margin:0; font-size:24px; text-transform:uppercase; letter-spacing:1px;">SEGOND CONSTRUCTION</h1>
-        <h2 style="margin:6px 0 0 0; font-size:16px; color:#334155;">📊 RÉCAPITULATIF DIRECTION — ${periodeStr.toUpperCase()}</h2>
-      </div>
+document.addEventListener("DOMContentLoaded", () => {
+  const prevMonthBtn = document.getElementById("prevMonthBtn");
+  const nextMonthBtn = document.getElementById("nextMonthBtn");
 
-      <!-- SECTION 1 : DASHBOARD SYNTHÈSE -->
-      <h3 style="color:#0f172a; border-bottom:2px solid #0f172a; padding-bottom:5px; margin-top:0;">📌 Suivi Synthétique des Saisies</h3>
-      
-      <table style="width:100%; border-collapse:collapse; margin-bottom:30px;">
-        <thead>
-          <tr style="background:#b60000; color:#fff;">
-            <th style="border:1px solid #991b1b; padding:10px; text-align:left; font-size:14px;">Employé</th>
-            <th style="border:1px solid #991b1b; padding:10px; text-align:center; width:20%; font-size:14px;">Total Heures</th>
-            <th style="border:1px solid #991b1b; padding:10px; text-align:center; width:25%; font-size:14px;">Statut</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${synthHTML}
-        </tbody>
-      </table>
+  if (prevMonthBtn) {
+    prevMonthBtn.onclick = () => {
+      moisAfficheDate.setMonth(moisAfficheDate.getMonth() - 1);
+      chargerRecapMensuelAdmin();
+    };
+  }
 
-      <!-- SECTION 2 : DÉTAILS DES HEURES -->
-      <h3 style="color:#0f172a; border-bottom:2px solid #0f172a; padding-bottom:5px; margin-top:30px; page-break-before: auto;">📋 Détail des Feuilles d'Heures Saisies</h3>
-      ${detailHTML || '<p style="color:#64748b; font-style:italic;">Aucune feuille d\'heures détaillée remplie pour cette semaine.</p>'}
-
-    </div>
-  `;
-
-  localStorage.setItem("planningHTML", printFullHTML);
-  localStorage.setItem("planningDate", `Recap_Direction_${lundiKey}`);
-  window.open("print.html", "_blank");
-};
-
-// ================= ÉVÉNEMENTS =================
-prevBtn.onclick = () => {
-  dateCourante.setDate(dateCourante.getDate() - 7);
-  chargerDonneesSemaine();
-};
-
-nextBtn.onclick = () => {
-  dateCourante.setDate(dateCourante.getDate() + 7);
-  chargerDonneesSemaine();
-};
-
-weekInput.onchange = () => {
-  dateCourante = new Date(weekInput.value);
-  chargerDonneesSemaine();
-};
-
-refreshBtn.onclick = () => chargerDonneesSemaine();
+  if (nextMonthBtn) {
+    nextMonthBtn.onclick = () => {
+      moisAfficheDate.setMonth(moisAfficheDate.getMonth() + 1);
+      chargerRecapMensuelAdmin();
+    };
+  }
+});
