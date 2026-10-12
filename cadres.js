@@ -24,6 +24,12 @@ function formatDateLocale(date) {
   return `${y}-${m}-${day}`;
 }
 
+// === CLÉ FIREBASE SÛRE ===
+// Firebase interdit . $ # [ ] / dans les clés : un chantier "AF 24/123" faisait échouer l'enregistrement.
+function cleFirebase(nom) {
+  return String(nom).replace(/[.$#\[\]\/%]/g, c => "%" + c.charCodeAt(0).toString(16).toUpperCase().padStart(2, "0"));
+}
+
 // === ELEMENTS DOM ===
 const retourBtn = document.getElementById("retour");
 const dateInput = document.getElementById("date");
@@ -123,7 +129,7 @@ function chargerChantiers() {
   const dateCible = formatDateLocale(dateCourante);
 
   const list = chantiersDisponibles.filter(c => {
-    const fin = planning.finChantier?.[c];
+    const fin = planning.finChantier?.[cleFirebase(c)];
     return !fin || fin > dateCible;
   });
 
@@ -171,6 +177,7 @@ supprimerEmployeBtn.addEventListener("click", async () => {
 
   await set(ref(db, "planning"), planning);
 
+  chargerEmployesPourMetier();
   alert(`ℹ️ ${nom} ne s'affichera plus après le ${dateFin}`);
   majDateEtTableau();
 });
@@ -193,7 +200,9 @@ ajouterChantierBtn.addEventListener("click", async () => {
   chargerChantiers();
 });
 
-// === SUPPRESSION CHANTIER (DATE DE FIN) ===
+// === SUPPRESSION CHANTIER DE LA LISTE (DATE DE FIN) ===
+// Le chantier reste dans la base ("chantiers"), les plannings et les feuilles d'heures :
+// il disparaît seulement de la liste déroulante à partir d'aujourd'hui.
 supprimerChantierBtn.addEventListener("click", async () => {
   const nom = chantierSelect.value;
   if (!nom) return alert("Sélectionne un chantier !");
@@ -201,10 +210,17 @@ supprimerChantierBtn.addEventListener("click", async () => {
   const dateFin = formatDateLocale(new Date());
 
   if (!planning.finChantier) planning.finChantier = {};
-  planning.finChantier[nom] = dateFin;
+  planning.finChantier[cleFirebase(nom)] = dateFin;
 
-  await set(ref(db, "planning"), planning);
+  try {
+    await set(ref(db, "planning"), planning);
+  } catch (err) {
+    console.error(err);
+    delete planning.finChantier[cleFirebase(nom)];
+    return alert("❌ Impossible de retirer le chantier : " + err.message);
+  }
 
+  chargerChantiers();
   alert(`ℹ️ Le chantier "${nom}" ne sera plus proposé après le ${dateFin}`);
   majDateEtTableau();
 });
