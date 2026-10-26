@@ -28,74 +28,106 @@
       </div>
     </div>
 
-    <!-- 1. SECTION : RÉCAPITULATIF MENSUEL ADMIN -->
-    <div class="admin-card monthly-card">
-      <div class="monthly-header-bar">
-        <h2>📅 Récapitulatif Mensuel des Heures</h2>
-        <div class="month-nav-group">
-          <button id="prevMonthBtn" class="btn-month-nav">◀ Mois Précédent</button>
-          <span id="currentMonthLabel">OCTOBRE 2026</span>
-          <button id="nextMonthBtn" class="btn-month-nav">Mois Suivant ▶</button>
-        </div>
-      </div>
+    <!-- ONGLETS -->
+    <nav class="tabs">
+      <button type="button" class="tab-btn active" data-tab="heures">📊 Heures</button>
+      <button type="button" class="tab-btn" data-tab="bi">🧾 Bons d'intervention <span id="biCount"></span></button>
+    </nav>
 
-      <div class="table-scroll-container">
-        <table id="monthRecapTable">
-          <!-- Généré dynamiquement en JS -->
-        </table>
-      </div>
-      
-      <div class="monthly-footer-action">
-        <button id="btn-print-month" class="btn-print-pro">🖨️ Imprimer Récap Mensuel</button>
-      </div>
-    </div>
+    <!-- ================= ONGLET HEURES ================= -->
+    <div id="tab-heures" class="tab-panel">
 
-    <!-- 2. SECTION : CONTRÔLES DE SEMAINE (ALIGNÉS & PRO) -->
-    <div class="admin-card week-controls-card">
-      <div class="week-controls-bar">
-        <!-- Navigation Gauche -->
-        <button id="prev-week" class="btn-pro-nav">◀ Précédente</button>
-
-        <!-- Centre : Date & Plage -->
-        <div class="week-center-group">
-          <div class="picker-group">
-            <label for="week-date">Semaine du :</label>
-            <input type="date" id="week-date">
+      <!-- 1. RÉCAPITULATIF MENSUEL ADMIN -->
+      <div class="admin-card monthly-card">
+        <div class="monthly-header-bar">
+          <h2>📅 Récapitulatif Mensuel des Heures</h2>
+          <div class="month-nav-group">
+            <button id="prevMonthBtn" class="btn-month-nav">◀ Mois Précédent</button>
+            <span id="currentMonthLabel">OCTOBRE 2026</span>
+            <button id="nextMonthBtn" class="btn-month-nav">Mois Suivant ▶</button>
           </div>
-          <span id="week-range"></span>
         </div>
 
-        <!-- Navigation & Actions Droite -->
-        <div class="week-actions-group">
-          <button id="next-week" class="btn-pro-nav">Suivante ▶</button>
-          <button id="btn-refresh" class="btn-pro-icon" title="Actualiser">🔄</button>
-          <button id="btn-print-admin" class="btn-print-pro">🖨️ Imprimer</button>
+        <div class="table-scroll-container">
+          <table id="monthRecapTable">
+            <!-- Généré dynamiquement en JS -->
+          </table>
+        </div>
+
+        <div class="monthly-footer-action">
+          <button id="btn-print-month" class="btn-print-pro">🖨️ Imprimer Récap Mensuel</button>
+        </div>
+      </div>
+
+      <!-- 2. CONTRÔLES DE SEMAINE -->
+      <div class="admin-card week-controls-card">
+        <div class="week-controls-bar">
+          <button id="prev-week" class="btn-pro-nav">◀ Précédente</button>
+
+          <div class="week-center-group">
+            <div class="picker-group">
+              <label for="week-date">Semaine du :</label>
+              <input type="date" id="week-date">
+            </div>
+            <span id="week-range"></span>
+          </div>
+
+          <div class="week-actions-group">
+            <button id="next-week" class="btn-pro-nav">Suivante ▶</button>
+            <button id="btn-refresh" class="btn-pro-icon" title="Actualiser">🔄</button>
+            <button id="btn-print-admin" class="btn-print-pro">🖨️ Imprimer</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. SUIVI DES SAISIES -->
+      <section class="dashboard-section admin-card">
+        <h2>📌 Suivi des Saisies de la Semaine</h2>
+        <div class="legend">
+          <span class="badge badge-green">🟩 ≥ 39h (Complété)</span>
+          <span class="badge badge-yellow">🟨 1h à 38.5h (En cours)</span>
+          <span class="badge badge-white">⬜ 0h (Non rempli)</span>
+        </div>
+
+        <div id="dashboard-container" class="dashboard-grid">
+          <!-- Généré dynamiquement en JS par corps d'état -->
+        </div>
+      </section>
+
+      <!-- 4. DÉTAILS DES FEUILLES D'HEURES -->
+      <section class="details-section">
+        <h2>📋 Détail des Feuilles d'Heures</h2>
+        <div id="details-container">
+          <!-- Cartes détaillées générées dynamiquement -->
+        </div>
+      </section>
+
+    </div>
+
+    <!-- ================= ONGLET BONS D'INTERVENTION ================= -->
+    <div id="tab-bi" class="tab-panel" hidden>
+      <div class="admin-card">
+        <div class="monthly-header-bar">
+          <h2>🧾 Bons d'intervention enregistrés</h2>
+          <input type="search" id="bi-search" class="bi-search" placeholder="Rechercher (n°, client, adresse, intervenant…)">
+        </div>
+        <div class="table-scroll-container">
+          <table id="bi-liste" class="bi-table"></table>
         </div>
       </div>
     </div>
 
-    <!-- 3. TABLEAU DASHBOARD SYNTHÉTIQUE (SUIVI DES SAISIES) -->
-    <section class="dashboard-section admin-card">
-      <h2>📌 Suivi des Saisies de la Semaine</h2>
-      <div class="legend">
-        <span class="badge badge-green">🟩 ≥ 39h (Complété)</span>
-        <span class="badge badge-yellow">🟨 1h à 38.5h (En cours)</span>
-        <span class="badge badge-white">⬜ 0h (Non rempli)</span>
-      </div>
+  </div>
 
-      <div id="dashboard-container" class="dashboard-grid">
-        <!-- Généré dynamiquement en JS par corps d'état -->
+  <!-- FENÊTRE DÉTAIL D'UN BI -->
+  <div id="bi-modal" class="bi-modal" hidden>
+    <div class="bi-modal-box">
+      <div id="bi-detail"></div>
+      <div class="bi-modal-actions">
+        <button type="button" id="bi-print" class="btn-print-pro">🖨️ Imprimer ce BI</button>
+        <button type="button" id="bi-close" class="btn-pro-nav">Fermer</button>
       </div>
-    </section>
-
-    <!-- 4. DÉTAILS DES FEUILLES D'HEURES -->
-    <section class="details-section">
-      <h2>📋 Détail des Feuilles d'Heures</h2>
-      <div id="details-container">
-        <!-- Cartes détaillées générées dynamiquement -->
-      </div>
-    </section>
-
+    </div>
   </div>
 
   <script type="module" src="admin.js"></script>

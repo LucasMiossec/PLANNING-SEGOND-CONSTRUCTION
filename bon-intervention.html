@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bon d'intervention</title>
+  <link rel="stylesheet" href="bon-intervention.css">
+</head>
+<body>
+
+  <div class="top-bar">
+    <button id="retour" type="button">⬅ Retour</button>
+    <h1>🧾 Bon d'intervention</h1>
+  </div>
+
+  <form id="biForm" class="bi-card" novalidate>
+
+    <div class="bi-numero">
+      Prochain n° : <b id="prochainNumero">....</b>
+      <small>(attribué uniquement à l'enregistrement)</small>
+    </div>
+
+    <h2>Client</h2>
+    <label for="client">Client</label>
+    <input id="client" type="text" autocomplete="off">
+
+    <label for="adresse">Adresse</label>
+    <input id="adresse" type="text" autocomplete="off">
+
+    <label for="tel">Tél</label>
+    <input id="tel" type="tel" inputmode="tel" autocomplete="off">
+
+    <h2>Intervention</h2>
+    <label for="dateAppel">Date de l'appel</label>
+    <input id="dateAppel" type="date">
+
+    <label for="dateIntervention">Date et heure de l'intervention</label>
+    <input id="dateIntervention" type="datetime-local">
+
+    <label for="intervenant">Intervenant</label>
+    <input id="intervenant" type="text" autocomplete="off">
+
+    <label for="motif">Motif de l'intervention</label>
+    <textarea id="motif" rows="3"></textarea>
+
+    <label for="travaux">Travaux effectués</label>
+    <textarea id="travaux" rows="6"></textarea>
+
+    <label for="materiel">Matériel</label>
+    <textarea id="materiel" rows="5"></textarea>
+
+    <h2>Récapitulatif</h2>
+    <div class="row3">
+      <div>
+        <label for="heures">Nombre d'heures</label>
+        <input id="heures" type="number" inputmode="decimal" step="0.25" min="0">
+      </div>
+      <div>
+        <label for="deplacement">Déplacement</label>
+        <input id="deplacement" type="text" autocomplete="off">
+      </div>
+      <div>
+        <label for="nbPersonnes">Nb personnels</label>
+        <input id="nbPersonnes" type="number" inputmode="numeric" min="1" step="1">
+      </div>
+    </div>
+
+    <h2>Signatures</h2>
+    <div class="sig-block">
+      <div class="sig-title">VISA RESPONSABLE <button type="button" class="sig-clear" data-pad="visa">Effacer</button></div>
+      <canvas id="padVisa" class="sig-pad"></canvas>
+    </div>
+    <div class="sig-block">
+      <div class="sig-title">SIGNATURE CLIENT <button type="button" class="sig-clear" data-pad="client">Effacer</button></div>
+      <canvas id="padClient" class="sig-pad"></canvas>
+    </div>
+
+    <div id="erreurs" class="erreurs" hidden></div>
+
+    <button id="btnSave" type="submit" class="btn-save">💾 Enregistrer le bon d'intervention</button>
+    <button id="btnReset" type="button" class="btn-reset">Vider le brouillon</button>
+  </form>
+
+  <div id="succes" class="succes" hidden>
+    <div class="succes-box">
+      <div class="succes-icon">✅</div>
+      <p>Bon d'intervention enregistré</p>
+      <div class="succes-num" id="succesNum"></div>
+      <button id="btnNouveau" type="button" class="btn-save">➕ Nouveau BI</button>
+      <button id="btnFermer" type="button" class="btn-reset">Retour au planning</button>
+    </div>
+  </div>
+
+  <script type="module" src="bon-intervention.js"></script>
+</body>
+</html>

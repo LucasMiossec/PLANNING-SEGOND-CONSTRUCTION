@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
 // ================= CONFIGURATION FIREBASE =================
 const firebaseConfig = {
@@ -7,7 +7,7 @@ const firebaseConfig = {
   authDomain: "planning-segond.firebaseapp.com",
   databaseURL: "https://planning-segond-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "planning-segond",
-  storageBucket: "planning-segond.appstop.com",
+  storageBucket: "planning-segond.appspot.com",
   messagingSenderId: "951519078075",
   appId: "1:951519078075:web:1152d3023ed737b8afab9e"
 };
@@ -31,6 +31,7 @@ let moisAfficheDate = new Date();
 let employesParMetier = {};
 let planningGlobal = {};
 let feuillesHeuresGlobal = {}; 
+let bonsInterventionGlobal = {};
 
 // ================= OUTILS DATE =================
 function getLundi(date) {
@@ -121,9 +122,11 @@ onValue(ref(db), (snap) => {
   employesParMetier = data.employes || {};
   planningGlobal = data.planning || {};
   feuillesHeuresGlobal = data.feuilles_heures || {}; 
+  bonsInterventionGlobal = data.bons_intervention?.items || {};
 
   chargerDonneesSemaine();
   chargerRecapMensuelAdmin();
+  afficherBI();
 });
 
 async function chargerDonneesSemaine() {
@@ -559,7 +562,7 @@ function remplirEnteteImpression(mode) {
 }
 
 function lancerImpression(mode) {
-  document.body.classList.remove("print-week-active", "print-month-active");
+  document.body.classList.remove("print-week-active", "print-month-active", "print-bi-active");
   document.body.classList.add(mode === "month" ? "print-month-active" : "print-week-active");
   remplirEnteteImpression(mode);
   window.print();
@@ -569,7 +572,7 @@ if (printBtn) printBtn.onclick = () => lancerImpression("week");
 if (printMonthBtn) printMonthBtn.onclick = () => lancerImpression("month");
 
 window.addEventListener("afterprint", () => {
-  document.body.classList.remove("print-week-active", "print-month-active");
+  document.body.classList.remove("print-week-active", "print-month-active", "print-bi-active");
 });
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -589,4 +592,175 @@ document.addEventListener("DOMContentLoaded", () => {
       chargerRecapMensuelAdmin();
     };
   }
+});
+
+// ================= ONGLETS =================
+document.querySelectorAll(".tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b === btn));
+    document.querySelectorAll(".tab-panel").forEach(p => { p.hidden = (p.id !== "tab-" + btn.dataset.tab); });
+  });
+});
+
+// ================= BONS D'INTERVENTION =================
+const biListe = document.getElementById("bi-liste");
+const biSearch = document.getElementById("bi-search");
+const biCount = document.getElementById("biCount");
+const biModal = document.getElementById("bi-modal");
+const biDetail = document.getElementById("bi-detail");
+
+// Échappe le texte saisi par les employés avant de l'insérer dans le HTML
+function escHTML(s) {
+  return String(s ?? "").replace(/[&<>"']/g, c => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[c]));
+}
+
+function safeImg(src) {
+  return typeof src === "string" && src.startsWith("data:image/") ? src : "";
+}
+
+function dateAppelFR(s) {
+  if (!s) return "-";
+  const [y, m, d] = String(s).split("-");
+  return d && m && y ? `${d}/${m}/${y}` : s;
+}
+
+function dateHeureFR(s) {
+  if (!s) return "-";
+  const d = new Date(s);
+  if (isNaN(d)) return s;
+  return d.toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" });
+}
+
+function afficherBI() {
+  if (!biListe) return;
+
+  const tous = Object.values(bonsInterventionGlobal)
+    .filter(Boolean)
+    .sort((a, b) => String(b.numero).localeCompare(String(a.numero)));
+
+  if (biCount) biCount.textContent = tous.length ? `(${tous.length})` : "";
+
+  const q = (biSearch?.value || "").trim().toLowerCase();
+  const liste = !q ? tous : tous.filter(bi =>
+    [bi.numero, bi.client, bi.adresse, bi.intervenant, bi.motif, bi.tel]
+      .some(v => String(v || "").toLowerCase().includes(q))
+  );
+
+  const rows = liste.length
+    ? liste.map(bi => `
+        <tr>
+          <td class="bi-num">${escHTML(bi.numero)}</td>
+          <td>${escHTML(dateHeureFR(bi.dateIntervention))}</td>
+          <td><b>${escHTML(bi.client)}</b></td>
+          <td>${escHTML(bi.adresse)}</td>
+          <td>${escHTML(bi.intervenant)}</td>
+          <td class="text-center">${escHTML(bi.heures)} h</td>
+          <td class="bi-actions-cell">
+            <button type="button" class="bi-open" data-num="${escHTML(bi.numero)}">Voir</button>
+            <button type="button" class="bi-delete" data-num="${escHTML(bi.numero)}" title="Supprimer ce BI">🗑️</button>
+          </td>
+        </tr>`).join("")
+    : `<tr><td colspan="7" class="bi-empty">${tous.length ? "Aucun résultat." : "Aucun bon d'intervention enregistré pour le moment."}</td></tr>`;
+
+  biListe.innerHTML = `
+    <thead>
+      <tr>
+        <th>N°</th><th>Intervention</th><th>Client</th><th>Adresse</th>
+        <th>Intervenant</th><th class="text-center">Heures</th><th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>${rows}</tbody>`;
+}
+
+function ouvrirBI(numero) {
+  const bi = bonsInterventionGlobal[numero];
+  if (!bi) return;
+
+  const visa = safeImg(bi.visaResponsable);
+  const sigClient = safeImg(bi.signatureClient);
+
+  biDetail.innerHTML = `
+    <div class="bi-doc-head">
+      <div class="bi-brand">SEGOND CONSTRUCTION<small>45, rue Grimaldi - 98000 Monaco</small></div>
+      <div class="bi-doc-num">Bon d'intervention n° ${escHTML(bi.numero)}</div>
+    </div>
+
+    <div class="bi-grid">
+      <div class="bi-field"><span>Client</span>${escHTML(bi.client)}</div>
+      <div class="bi-field"><span>Téléphone</span>${escHTML(bi.tel)}</div>
+      <div class="bi-field full"><span>Adresse</span>${escHTML(bi.adresse)}</div>
+    </div>
+
+    <div class="bi-grid three">
+      <div class="bi-field"><span>Date de l'appel</span>${escHTML(dateAppelFR(bi.dateAppel))}</div>
+      <div class="bi-field"><span>Date et heure de l'intervention</span>${escHTML(dateHeureFR(bi.dateIntervention))}</div>
+      <div class="bi-field"><span>Intervenant</span>${escHTML(bi.intervenant)}</div>
+    </div>
+
+    <div class="bi-grid">
+      <div class="bi-field full"><span>Motif de l'intervention</span><div class="pre">${escHTML(bi.motif)}</div></div>
+      <div class="bi-field full"><span>Travaux effectués</span><div class="pre">${escHTML(bi.travaux)}</div></div>
+      <div class="bi-field full"><span>Matériel</span><div class="pre">${escHTML(bi.materiel)}</div></div>
+    </div>
+
+    <div class="bi-grid three">
+      <div class="bi-field"><span>Nombre d'heures</span>${escHTML(bi.heures)} h</div>
+      <div class="bi-field"><span>Déplacement</span>${escHTML(bi.deplacement)}</div>
+      <div class="bi-field"><span>Nombre de personnels</span>${escHTML(bi.nbPersonnes)}</div>
+    </div>
+
+    <div class="bi-sigs">
+      <div class="bi-sig">Visa responsable${visa ? `<img src="${visa}" alt="Visa responsable">` : ""}</div>
+      <div class="bi-sig">Signature client${sigClient ? `<img src="${sigClient}" alt="Signature client">` : ""}</div>
+    </div>
+
+    <div style="margin-top:10px; font-size:0.75rem; color:#94a3b8;">
+      Enregistré le ${escHTML(bi.creeLe ? new Date(bi.creeLe).toLocaleString("fr-FR") : "-")}
+    </div>
+  `;
+
+  biModal.hidden = false;
+}
+
+function fermerBI() {
+  if (biModal) biModal.hidden = true;
+}
+
+if (biSearch) biSearch.addEventListener("input", afficherBI);
+
+if (biListe) {
+  biListe.addEventListener("click", (e) => {
+    const btnOpen = e.target.closest(".bi-open");
+    const btnDelete = e.target.closest(".bi-delete");
+
+    if (btnOpen) {
+      ouvrirBI(btnOpen.dataset.num);
+    }
+
+    if (btnDelete) {
+      const numero = btnDelete.dataset.num;
+      if (confirm(`Êtes-vous sûr de vouloir supprimer définitivement le Bon d'intervention n° ${numero} ?`)) {
+        const biRef = ref(db, `bons_intervention/items/${numero}`);
+        remove(biRef)
+          .then(() => {
+            // La mise à jour s'effectue automatiquement grâce au onValue global
+          })
+          .catch((error) => {
+            alert("Erreur lors de la suppression : " + error.message);
+          });
+      }
+    }
+  });
+}
+
+document.getElementById("bi-close")?.addEventListener("click", fermerBI);
+biModal?.addEventListener("click", (e) => { if (e.target === biModal) fermerBI(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") fermerBI(); });
+
+document.getElementById("bi-print")?.addEventListener("click", () => {
+  document.body.classList.remove("print-week-active", "print-month-active");
+  document.body.classList.add("print-bi-active");
+  window.print();
 });
