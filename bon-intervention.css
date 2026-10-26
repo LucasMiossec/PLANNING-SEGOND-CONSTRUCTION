@@ -96,3 +96,53 @@ textarea { resize: vertical; }
 }
 .succes-icon { font-size: 3em; }
 .succes-num { font-size: 2em; font-weight: 700; color: #ff1e1e; margin: 6px 0 10px; }
+
+/* SEGOND | DESIGN SYSTEM ENTERPRISE — ÉCRAN UNIQUEMENT */
+@media screen {
+:root{--enterprise-bg:#0c1016;--enterprise-panel:#171d26;--enterprise-panel2:#202833;--enterprise-border:#343d4a;--enterprise-text:#f2f5f8;--enterprise-muted:#a7b2c1;--enterprise-red:#c61d2b;--enterprise-red-hover:#a91624;--enterprise-radius:5px;color-scheme:dark}
+*,*::before,*::after{box-sizing:border-box}
+html{background:var(--enterprise-bg);scrollbar-color:#4c5664 #111720}
+body{background:var(--enterprise-bg)!important;background-image:none!important;color:var(--enterprise-text)!important;font-family:Inter,'Segoe UI',Arial,sans-serif!important;letter-spacing:0!important;text-shadow:none!important;animation:none!important;min-height:100dvh}
+body::before,body::after{pointer-events:none}
+h1,h2,h3,h4{color:var(--enterprise-text)!important;text-shadow:none!important;letter-spacing:-.025em;line-height:1.25}
+h1{font-size:clamp(1.25rem,2vw,1.85rem)!important}h2{font-size:clamp(1.08rem,1.6vw,1.4rem)!important}h3{font-size:1.05rem!important}
+p,span,div,small{overflow-wrap:break-word}
+.top-bar,.top-nav{background:#141a23!important;background-image:none!important;color:var(--enterprise-text)!important;border:1px solid var(--enterprise-border)!important;border-bottom:2px solid var(--enterprise-red)!important;border-radius:0!important;box-shadow:none!important;gap:12px;padding:16px 20px!important}
+.top-bar h1,.top-nav h1{color:#fff!important;margin:0!important}
+.container{max-width:1440px}
+.form,.planning-container,.table-card,.admin-card,.bi-card,.card-emp,.empty-card,.bi-modal-box{background:var(--enterprise-panel)!important;background-image:none!important;color:var(--enterprise-text)!important;border:1px solid var(--enterprise-border)!important;border-radius:5px!important;box-shadow:0 2px 8px rgba(0,0,0,.12)!important;backdrop-filter:none!important;animation:none!important}
+.form{max-width:100%;padding:22px!important}
+.planning-container,.admin-card,.table-card,.bi-card{padding:clamp(14px,2vw,26px)!important}
+label,.subtitle{color:var(--enterprise-muted)!important;font-weight:600!important}
+input,select,textarea{background:#10161e!important;background-image:none!important;color:#f4f6f9!important;border:1px solid #46505e!important;border-radius:4px!important;box-shadow:none!important;font:inherit!important;font-size:16px!important;min-height:42px;max-width:100%;accent-color:var(--enterprise-red)}
+input,select{padding:10px 12px!important}textarea{padding:12px!important}
+input::placeholder,textarea::placeholder{color:#8491a1!important}
+input:focus,select:focus,textarea:focus{outline:2px solid rgba(198,29,43,.3)!important;outline-offset:1px;border-color:#d9414d!important;box-shadow:none!important}
+button,.btn,.btn-back,a[class*="btn"]{border-radius:4px!important;box-shadow:none!important;text-shadow:none!important;filter:none!important;transform:none!important;transition:background-color .16s ease,border-color .16s ease,color .16s ease!important;font-family:inherit!important;font-weight:650!important;letter-spacing:0!important;cursor:pointer}
+button:hover,.btn:hover,.btn-back:hover{transform:none!important;filter:none!important}
+button:focus-visible,a:focus-visible{outline:2px solid #f06871!important;outline-offset:2px}
+button:not(.tab-btn),.btn,.btn-back{background:#293341!important;color:#f4f6f9!important;border:1px solid #4a5666!important}
+button:not(.tab-btn):hover,.btn:hover,.btn-back:hover{background:#384456!important;border-color:#667488!important}
+#ajouter,#voirPlanning,#btn-pdf,#btnSave,.btn-save,.btn-print-pro,.btn-export,.print-btn,#goFeuilleHeures,#goBI,#btn-admin-link,.btn-employes,.btn-cadres{background:var(--enterprise-red)!important;border:1px solid #e34551!important;color:white!important}
+#ajouter:hover,#voirPlanning:hover,#btn-pdf:hover,#btnSave:hover,.btn-save:hover,.btn-print-pro:hover,.btn-export:hover,.print-btn:hover,#goFeuilleHeures:hover,#goBI:hover{background:var(--enterprise-red-hover)!important}
+#retour,.btn-back,.navJour,.btn-pro-nav,.btn-month-nav,.week-selector button{background:#27313d!important;color:#e9eef4!important;border-color:#495563!important}
+.tabs{display:flex;gap:3px;overflow-x:auto;border-bottom:1px solid var(--enterprise-border)!important;scrollbar-width:thin}
+.tab-btn{border-radius:4px 4px 0 0!important;color:#aab6c4!important;background:transparent!important;white-space:nowrap}
+.tab-btn.active{color:#fff!important;background:#29313e!important;border-bottom:3px solid var(--enterprise-red)!important}
+.table-scroll-container,#planningTable,.planning,.table-card{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse!important;width:100%;font-size:.9rem}
+th{background:#26303d!important;background-image:none!important;color:#e8edf4!important;border:1px solid #3c4856!important;text-transform:none!important;font-weight:700!important;white-space:nowrap}
+td{color:#e4eaf2!important;border-bottom:1px solid #36404d!important}
+tr:nth-child(even){background:rgba(255,255,255,.025)!important}tbody tr:hover{background:#25303d!important}
+select option{background:#141b25;color:#fff}
+.bi-numero,.total-badge{background:#7f1722!important;color:#fff!important;border-radius:4px!important}
+.sig-pad{background:#fff!important;border:1px solid #596473!important;border-radius:4px!important;max-width:100%}
+#day-buttons{display:flex;flex-wrap:wrap;gap:8px}.btn-day{background:#26313e!important;border:1px solid #4c5a6b!important;color:#f1f5f9!important;border-radius:4px!important}
+#day-buttons button{min-height:42px}
+.total,#total-h{color:#ff6874!important}
+@media(max-width:800px){body{overflow-x:hidden}.top-bar,.top-nav{padding:12px!important;flex-wrap:wrap}.top-bar h1,.top-nav h1{font-size:1.1rem!important;min-width:0}.container{width:100%!important;max-width:100%!important;padding-left:12px!important;padding-right:12px!important}.form,.planning-container,.table-card,.admin-card,.bi-card{max-width:100%!important;width:100%!important;padding:14px!important;margin-left:0!important;margin-right:0!important}.form{gap:12px}.planning-container{margin-top:16px!important}.filters{grid-template-columns:1fr!important}.week-selector{grid-template-columns:44px minmax(0,1fr) 44px!important}.week-controls-bar,.monthly-header-bar,.month-nav-group,.week-actions-group{flex-wrap:wrap!important}.row3{grid-template-columns:repeat(2,minmax(0,1fr))!important}button{min-height:42px}table{font-size:.82rem}th,td{padding:9px!important}.planning-container h3,#titreSemaine,#titrePlanning{flex-wrap:wrap!important;gap:8px!important}.tabs{max-width:100%}}
+@media(max-width:480px){.row3{grid-template-columns:1fr!important}.top-bar h1,.top-nav h1{font-size:1rem!important}.top-bar{gap:8px}.bi-card{padding:14px!important}.actions{width:100%}#day-buttons{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.btn-day{padding:8px 3px!important;font-size:.8rem!important}.filters,.week-selector{gap:8px!important}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+}
+
+@media screen {.bi-card{width:min(100%,760px)!important;max-width:760px!important}.bi-card h2{border-left:3px solid #c61d2b!important;padding-left:12px!important}.erreurs{border-radius:4px!important}}
