@@ -212,5 +212,14 @@ if (feuilleHeuresBtn) {
     window.location.href = "feuille-heures.html";
   });
 }
+const biBtn = document.getElementById("goBI");
+if (biBtn) {
+  biBtn.addEventListener("click", () => {
+    localStorage.setItem("metier", metierInput.value);
+    localStorage.setItem("employe", employeSelect.value);
+    window.location.href = "bon-intervention.html";
+  });
+}
+
 // === INIT ===
 majTitreSemaine();
