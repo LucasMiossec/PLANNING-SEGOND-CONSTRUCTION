@@ -18,24 +18,12 @@
         👷 Employés
       </button>
       <button class="btn btn-cadres" id="btnCadres">👨‍💼 Cadres</button>
-      </button>
     </section>
 
     <footer>
       © 2025 Segond Construction — Application interne — Miossec Lucas
     </footer>
   </main>
-<script>
-  document.getElementById("btnCadres").addEventListener("click", function() {
-    const motDePasse = prompt("🔐 Entrez le mot de passe pour accéder à l'espace Cadres :");
-    const bonMotDePasse = "segond2025"; // 👉 tu peux le changer ici
-
-    if (motDePasse === bonMotDePasse) {
-      window.location.href = "cadres.html";
-    } else if (motDePasse !== null) {
-      alert("❌ Mot de passe incorrect !");
-    }
-  });
-</script>
+<script>document.getElementById("btnCadres").addEventListener("click", () => location.href="connexion.html?next=cadres");</script>
 </body>
 </html>

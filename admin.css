@@ -805,3 +805,19 @@ body {
   body.print-bi-active .bi-field { color: #000; }
   body.print-bi-active .bi-sig img { border: 1px solid #cbd5e1; }
 }
+
+/* ================= ACCÈS EMPLOYÉS ================= */
+.access-note { color: var(--text-muted); line-height: 1.6; }
+#access-search { display: block; width: 100%; max-width: 440px; box-sizing: border-box;
+  margin: 10px 0 18px; padding: 12px; color: white; background: #0b0f19;
+  border: 1px solid var(--border-light); border-radius: 8px; font-size: 1rem; }
+.access-list { display: grid; gap: 10px; }
+.access-row { display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  padding: 14px; background: #0f172a; border: 1px solid var(--border-light); border-radius: 9px; }
+.access-row strong, .access-row small { display: block; }
+.access-row small { margin-top: 4px; color: var(--text-muted); }
+.access-status { color: #fbbf24; font-size: .85rem; }
+.access-row button { padding: 9px 12px; background: #475569; color: #e2e8f0;
+  border: 0; border-radius: 7px; cursor: not-allowed; opacity: .7; }
+@media (max-width: 650px) { .access-row { flex-wrap: wrap; } .access-row button { width: 100%; } }
+@media print { #tab-acces { display: none !important; } }

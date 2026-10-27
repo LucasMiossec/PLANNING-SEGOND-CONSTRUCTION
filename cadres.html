@@ -6,7 +6,7 @@
   <title>Planning - Cadres</title>
   <link rel="stylesheet" href="cadres.css">
 </head>
-<body>
+<body style="visibility:hidden">
   <div class="top-bar">
     <button id="retour">⬅ Retour</button>
     <h1>📅 Planning des cadres</h1>
@@ -64,6 +64,17 @@
     <div id="planningTable"></div>
   </div>
 
-  <script type="module" src="cadres.js"></script>
+  <script type="module">
+import { requireAccess, logout } from "./auth-guard.js";
+if (await requireAccess("cadres")) {
+ document.body.style.visibility="visible";
+ const button=document.createElement("button");
+ button.textContent="🔒 Déconnexion";
+ button.style.cssText="position:fixed;right:12px;bottom:12px;z-index:9999;background:#b60000;color:white;border:0;border-radius:8px;padding:12px;cursor:pointer";
+ button.addEventListener("click",logout);
+ document.body.appendChild(button);
+ await import("./cadres.js");
+}
+</script>
 </body>
 </html>

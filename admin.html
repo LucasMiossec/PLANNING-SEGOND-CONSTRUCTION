@@ -6,7 +6,7 @@
   <title>Récapitulatif Direction - Admin</title>
   <link rel="stylesheet" href="admin.css">
 </head>
-<body>
+<body style="visibility:hidden">
 
   <!-- NAVBAR TOP -->
   <header class="top-nav">
@@ -32,6 +32,7 @@
     <nav class="tabs">
       <button type="button" class="tab-btn active" data-tab="heures">📊 Heures</button>
       <button type="button" class="tab-btn" data-tab="bi">🧾 Bons d'intervention <span id="biCount"></span></button>
+      <button type="button" class="tab-btn" data-tab="acces">🔐 Accès employés</button>
     </nav>
 
     <!-- ================= ONGLET HEURES ================= -->
@@ -117,6 +118,17 @@
       </div>
     </div>
 
+    <!-- ONGLET ACCÈS EMPLOYÉS : PRÉPARATION, SANS STOCKAGE DE CODES -->
+    <section id="tab-acces" class="tab-panel" hidden>
+      <div class="admin-card">
+        <h2>🔐 Accès employés</h2>
+        <p class="access-note">Liste des salariés synchronisée avec Firebase. La création des codes sera activée après configuration de leur vérification sécurisée. Aucun code n'est enregistré ici.</p>
+        <label for="access-search">Rechercher un salarié</label>
+        <input id="access-search" type="search" placeholder="Nom ou métier" autocomplete="off">
+        <div id="access-list" class="access-list" aria-live="polite">Chargement des salariés…</div>
+      </div>
+    </section>
+
   </div>
 
   <!-- FENÊTRE DÉTAIL D'UN BI -->
@@ -130,6 +142,17 @@
     </div>
   </div>
 
-  <script type="module" src="admin.js"></script>
+  <script type="module">
+import { requireAccess, logout } from "./auth-guard.js";
+if (await requireAccess("admin")) {
+ document.body.style.visibility="visible";
+ const button=document.createElement("button");
+ button.textContent="🔒 Déconnexion";
+ button.style.cssText="position:fixed;right:12px;bottom:12px;z-index:9999;background:#b60000;color:white;border:0;border-radius:8px;padding:12px;cursor:pointer";
+ button.addEventListener("click",logout);
+ document.body.appendChild(button);
+ await import("./admin.js");
+}
+</script>
 </body>
 </html>
