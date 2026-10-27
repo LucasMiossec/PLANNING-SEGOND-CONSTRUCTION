@@ -2,6 +2,16 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { getDatabase, ref, onValue, set, get } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
+// Contrôle de navigation provisoire : ne sécurise PAS la base Firebase.
+const sessionPIN = (() => {
+  try { return JSON.parse(sessionStorage.getItem("segond_pin_session") || "null"); }
+  catch { return null; }
+})();
+if (!sessionPIN?.metier || !sessionPIN?.employe) {
+  window.location.replace("connexion-employe.html");
+  throw new Error("Connexion employé requise");
+}
+
 // ================= FIREBASE =================
 const firebaseConfig = {
   apiKey: "AIzaSyCe0hFb2nlkye4oEpZiHn3dK1GjEbdEpmE",
@@ -51,7 +61,7 @@ onValue(ref(db), (snap) => {
 
 // ================= CHARGER EMPLOYÉS =================
 function chargerEmployes() {
-  const metier = metierSelect.value;
+  const metier = sessionPIN.metier;
   const dateAujourdhui = dateCourante.toISOString().split('T')[0];
 
   const employeActuel = employeSelect.value;
@@ -79,15 +89,14 @@ function chargerEmployes() {
     });
   }
 
-  if (employeActuel) {
-    employeSelect.value = employeActuel;
-  }
+  employeSelect.value = sessionPIN.employe;
+  metierSelect.value = sessionPIN.metier;
 }
 
 // ================= SAUVEGARDE ET CHARGEMENT =================
 
 function sauvegarderDonnees() {
-  const emp = employeSelect.value;
+  const emp = sessionPIN.employe;
   const lundi = getLundi(dateCourante).toISOString().split('T')[0];
   if (!emp || emp === "" || emp === "-- Employé --") return;
 
@@ -105,7 +114,7 @@ function sauvegarderDonnees() {
 }
 
 async function chargerDonneesEmploye() {
-  const emp = employeSelect.value;
+  const emp = sessionPIN.employe;
   const lundiDate = getLundi(dateCourante);
   const lundiKey = lundiDate.toISOString().split('T')[0];
   
@@ -327,6 +336,14 @@ document.getElementById("btn-pdf").onclick = () => {
   window.open("print.html", "_blank");
 };
 
+// Identité verrouillée à la connexion (contrôle UI uniquement).
+metierSelect.value = sessionPIN.metier;
+metierSelect.disabled = true;
+employeSelect.disabled = true;
+const titreIdentite = document.createElement("p");
+titreIdentite.textContent = `👷 ${sessionPIN.employe} — ${sessionPIN.metier}`;
+titreIdentite.style.cssText = "font-weight:bold;text-align:center;";
+document.querySelector(".filters")?.prepend(titreIdentite);
 // Initialisation
 weekInput.value = dateCourante.toISOString().split("T")[0];
 chargerDonneesEmploye();

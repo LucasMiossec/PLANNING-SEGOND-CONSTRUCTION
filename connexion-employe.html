@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Connexion Employé - SEGOND CONSTRUCTION</title>
+
+  <link rel="stylesheet" href="connexion-employe.css">
+</head>
+
+<body>
+
+  <main class="connexion-container">
+
+    <div class="connexion-card">
+
+      <div class="logo">
+        <span class="logo-icon">👷</span>
+        <h1>SEGOND CONSTRUCTION</h1>
+        <p>Accès à ma feuille d'heures</p>
+      </div>
+
+      <form id="connexion-form">
+
+        <div class="form-group">
+          <label for="metier">Mon métier</label>
+
+          <select id="metier" required>
+            <option value="">-- Sélectionner mon métier --</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="employe">Mon nom</label>
+
+          <select id="employe" required disabled>
+            <option value="">-- Sélectionner mon nom --</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="code">Mon code personnel</label>
+
+          <input
+            type="password"
+            id="code"
+            placeholder="Code à 4 chiffres"
+            inputmode="numeric"
+            pattern="[0-9]{4}"
+            maxlength="4"
+            autocomplete="off"
+            required
+          >
+        </div>
+
+        <p id="message" class="message" role="status"></p>
+
+        <button type="submit" id="btn-connexion">
+          🔒 Se connecter
+        </button>
+
+      </form>
+
+      <div class="infos">
+        <p>🔐 Votre feuille d'heures personnelle</p>
+        <p>Un problème avec votre code ? Contactez votre responsable.</p>
+      </div>
+
+      <a href="employes.html" class="retour">
+        ← Retour au planning
+      </a>
+
+    </div>
+
+  </main>
+
+  <script type="module" src="connexion-employe.js"></script>
+
+</body>
+</html>

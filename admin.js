@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+import { getDatabase, ref, onValue, remove, set } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
 // ================= CONFIGURATION FIREBASE =================
 const firebaseConfig = {
@@ -32,6 +32,7 @@ let employesParMetier = {};
 let planningGlobal = {};
 let feuillesHeuresGlobal = {}; 
 let bonsInterventionGlobal = {};
+let codesPinEmployes = {};
 
 // ================= OUTILS DATE =================
 function getLundi(date) {
@@ -119,14 +120,24 @@ function getLignesEmployeSemaine(FH_Semaine, empKey, empName) {
 // ================= SYNC ET CHARGEMENT =================
 onValue(ref(db), (snap) => {
   const data = snap.val() || {};
+
   employesParMetier = data.employes || {};
   planningGlobal = data.planning || {};
-  feuillesHeuresGlobal = data.feuilles_heures || {}; 
+  feuillesHeuresGlobal = data.feuilles_heures || {};
   bonsInterventionGlobal = data.bons_intervention?.items || {};
+  codesPinEmployes = data.codes_pin_employes || {};
 
+  // Actualisation du tableau des heures
   chargerDonneesSemaine();
+
+  // Actualisation du récapitulatif mensuel
   chargerRecapMensuelAdmin();
+
+  // Actualisation des bons d'intervention
   afficherBI();
+
+  // 🔐 CORRECTION : affichage des salariés dans Accès employés
+  afficherAccesEmployes();
 });
 
 async function chargerDonneesSemaine() {
@@ -764,3 +775,186 @@ document.getElementById("bi-print")?.addEventListener("click", () => {
   document.body.classList.add("print-bi-active");
   window.print();
 });
+
+// =====================================================
+// 🔐 ACCÈS EMPLOYÉS — GESTION DES CODES PIN
+// VERSION PRÉPARATION / PRÉVISUALISATION
+// =====================================================
+
+const accessSearch = document.getElementById("access-search");
+const accessList = document.getElementById("access-list");
+
+// Génère un code PIN aléatoire à 4 chiffres
+function genererPin4() {
+  const valeurs = new Uint32Array(1);
+  crypto.getRandomValues(valeurs);
+
+  return String(valeurs[0] % 10000).padStart(4, "0");
+}
+
+// Affiche les employés dans l'onglet Accès employés
+function afficherAccesEmployes() {
+  if (!accessList) return;
+
+  const recherche = (accessSearch?.value || "")
+    .trim()
+    .toLocaleLowerCase("fr");
+
+  const aujourdHui = formatDateLocal(new Date());
+
+  const salaries = [];
+
+  // Récupération des employés déjà présents dans Firebase
+  for (const [metier, groupe] of Object.entries(employesParMetier)) {
+    if (!groupe || typeof groupe !== "object") continue;
+
+    for (const [cle, employe] of Object.entries(groupe)) {
+      const nom = extractEmpName(employe);
+
+      if (!nom) continue;
+
+      // Ne pas afficher les employés ayant quitté l'entreprise
+      const fin =
+        planningGlobal.finEmploye?.[metier]?.[nom] ||
+        planningGlobal.finEmploye?.[nom];
+
+      if (fin && fin < aujourdHui) continue;
+
+      // Recherche par nom ou métier
+      if (
+        recherche &&
+        !`${metier} ${nom}`
+          .toLocaleLowerCase("fr")
+          .includes(recherche)
+      ) {
+        continue;
+      }
+
+      salaries.push({
+        metier,
+        nom
+      });
+    }
+  }
+
+  // Tri alphabétique
+  salaries.sort(
+    (a, b) =>
+      a.metier.localeCompare(b.metier, "fr") ||
+      a.nom.localeCompare(b.nom, "fr")
+  );
+
+  accessList.replaceChildren();
+
+  if (!salaries.length) {
+    const vide = document.createElement("p");
+    vide.className = "access-note";
+    vide.textContent = "Aucun salarié correspondant.";
+
+    accessList.appendChild(vide);
+    return;
+  }
+
+  // Création d'une ligne pour chaque employé
+  for (const salarie of salaries) {
+    const ligne = document.createElement("div");
+    ligne.className = "access-row";
+
+    // Identité de l'employé
+    const identite = document.createElement("div");
+
+    const nom = document.createElement("strong");
+    nom.textContent = salarie.nom;
+
+    const metier = document.createElement("small");
+    metier.textContent = salarie.metier;
+
+    identite.append(nom, metier);
+
+    // Zone des boutons
+    const zone = document.createElement("div");
+
+    zone.style.cssText = `
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    `;
+
+    // Champ PIN
+    const input = document.createElement("input");
+
+    input.type = "text";
+    input.inputMode = "numeric";
+    input.maxLength = 4;
+    input.placeholder = "PIN (4 chiffres)";
+    input.value = codesPinEmployes[salarie.metier]?.[salarie.nom]?.pin || "";
+    input.autocomplete = "off";
+
+    input.setAttribute(
+      "aria-label",
+      `PIN de ${salarie.nom} (simulation)`
+    );
+
+    input.style.cssText = `
+      width: 155px;
+      max-width: 100%;
+      padding: 9px;
+    `;
+
+    // Autoriser uniquement les chiffres
+    input.addEventListener("input", () => {
+      input.value = input.value
+        .replace(/\D/g, "")
+        .slice(0, 4);
+    });
+
+    // Bouton génération aléatoire
+    const generer = document.createElement("button");
+
+    generer.type = "button";
+    generer.textContent = "🎲 Générer";
+
+    generer.addEventListener("click", () => {
+      input.value = genererPin4();
+      input.focus();
+    });
+
+    // Bouton prévisualisation
+    const preparer = document.createElement("button");
+
+    preparer.type = "button";
+    preparer.textContent = "💾 Enregistrer";
+
+    preparer.addEventListener("click", async () => {
+      if (!/^\d{4}$/.test(input.value)) {
+        alert("Saisis exactement 4 chiffres.");
+        return;
+      }
+      preparer.disabled = true;
+      try {
+        await set(ref(db, `codes_pin_employes/${salarie.metier}/${salarie.nom}`), {
+          pin: input.value
+        });
+        alert(`PIN enregistré pour ${salarie.nom}.`);
+      } catch (err) {
+        alert("Erreur Firebase : " + err.message);
+      } finally {
+        preparer.disabled = false;
+      }
+    });
+
+    // Assemblage
+    zone.append(input, generer, preparer);
+
+    ligne.append(identite, zone);
+
+    accessList.appendChild(ligne);
+  }
+}
+
+// Recherche dynamique
+accessSearch?.addEventListener(
+  "input",
+  afficherAccesEmployes
+);

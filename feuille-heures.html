@@ -18,18 +18,21 @@
 <div class="container">
 
   <div class="filters">
-    <select id="metier">
+    <div class="filter-field employee-field">
+      <label for="employe">👤 EMPLOYÉ</label>
+      <select id="employe"><option value="">-- Employé --</option></select>
+    </div>
+    <div class="filter-field trade-field">
+      <label for="metier">👷 CORPS D'ÉTAT</label>
+      <select id="metier">
       <option value="">-- Métier --</option>
       <option value="electricite">Électricité</option>
       <option value="plomberie">Plomberie</option>
       <option value="menuiserie">Menuiserie</option>
       <option value="peinture">Peinture</option>
       <option value="maconnerie">Maçonnerie</option>
-    </select>
-
-    <select id="employe">
-      <option value="">-- Employé --</option>
-    </select>
+      </select>
+    </div>
   </div>
 
   <div class="week-selector">

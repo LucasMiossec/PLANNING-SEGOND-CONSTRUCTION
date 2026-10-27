@@ -209,7 +209,7 @@ if (feuilleHeuresBtn) {
     localStorage.setItem("metier", metier);
     localStorage.setItem("employe", employe);
 
-    window.location.href = "feuille-heures.html";
+    window.location.href = "connexion-employe.html";
   });
 }
 const biBtn = document.getElementById("goBI");

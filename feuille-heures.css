@@ -275,3 +275,173 @@ td {
   td[data-label]::before { content: none !important; }
   th { display: table-cell !important; border: 1px solid #333 !important; color: black !important; background: #eee !important; }
 }
+
+/* ===== SEGOND : identité employé connecté ===== */
+#identite-employe, .employee-identity, .identite-employe {
+  margin: 14px 0; padding: 12px 16px; border: 1px solid rgba(16,185,129,.3);
+  border-radius: 12px; background: rgba(16,185,129,.09);
+  color: #d1fae5; font-weight: 700; text-align: center;
+}
+.filters select:disabled { opacity: .9; color: #e2e8f0; background: #263449; cursor: not-allowed; }
+button:focus-visible, select:focus-visible, input:focus-visible { outline: 3px solid #f87171; outline-offset: 2px; }
+@media (max-width: 768px) {
+  .top-bar h1 { font-size: 1rem; }
+  .table-card { padding: 12px; }
+  #day-buttons .btn-day { min-height: 43px; }
+  #btn-pdf { min-height: 48px; }
+}
+@media print { #identite-employe, .employee-identity, .identite-employe { display: none !important; } }
+
+/* ===== RESPONSIVE MOBILE : présentation en cartes comme avant ===== */
+html, body { max-width: 100%; overflow-x: hidden; }
+@media (max-width: 768px) {
+  .container { width: 94%; max-width: 100%; }
+  .filters { grid-template-columns: 1fr; }
+  .week-selector { grid-template-columns: 48px minmax(0,1fr) 48px; gap: 8px; }
+  .week-selector button { padding: 10px 4px; min-height: 44px; }
+  .week-selector input { min-width: 0; }
+  .table-card { width: 100%; padding: 12px; overflow: visible; }
+  .table-card table, .table-card thead, .table-card tbody, .table-card tr, .table-card td { display: block; width: 100%; box-sizing: border-box; }
+  .table-card thead { display: none; }
+  .table-card tbody tr { margin: 0 0 14px; padding: 12px; border-radius: 12px; background: #1e293b; border: 1px solid #334155; }
+  .table-card td { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 0; text-align: left; }
+  .table-card td[data-label]::before { content: attr(data-label); flex: 0 0 90px; font-weight: 700; color: #94a3b8; }
+  .table-card td select.chantier, .table-card td input.comm-input { flex: 1; width: 60%; min-width: 0; }
+  .table-card td input.h { flex: 0 0 80px; width: 80px; }
+  #day-buttons { grid-template-columns: repeat(3, minmax(0,1fr)); }
+  .btn-day { min-height: 46px; }
+}
+@media print {
+  html, body { overflow: visible !important; }
+  .table-card table { display: table !important; }
+  .table-card thead { display: table-header-group !important; }
+  .table-card tbody { display: table-row-group !important; }
+  .table-card tr { display: table-row !important; }
+  .table-card td { display: table-cell !important; }
+}
+
+/* ========================================================
+   SEGOND — HAUT DE PAGE MODERNISÉ (sans toucher au tableau)
+   ======================================================== */
+.top-bar {
+  min-height: 68px;
+  padding: 10px clamp(14px, 4vw, 44px);
+  background: linear-gradient(135deg, #0b1729, #111e32);
+  border-bottom: 1px solid #30445c;
+  box-shadow: 0 5px 22px rgba(0,0,0,.16);
+}
+.top-bar h1 {
+  font-size: clamp(1.15rem, 2.3vw, 1.65rem);
+  font-weight: 800;
+  letter-spacing: -.035em;
+  color: #f8fafc;
+}
+.top-bar button {
+  min-width: 48px;
+  min-height: 46px;
+  border-radius: 12px;
+  border: 1px solid #48617e;
+  background: #17283e;
+  font-size: 1.3rem;
+  transition: background .2s ease;
+}
+.top-bar button:hover { background: #263d59; }
+
+/* Zone de sélection : un seul bloc, champs équilibrés */
+.filters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: 14px;
+  margin-top: 22px;
+  padding: 20px;
+  border: 1px solid #31435a;
+  border-radius: 16px;
+  background: linear-gradient(145deg, #172438, #111d30);
+  box-shadow: 0 10px 24px rgba(0,0,0,.12);
+}
+.filters #employe { order: 1; }
+.filters #metier { order: 2; }
+.filters select {
+  min-width: 0;
+  min-height: 52px;
+  padding: 13px 42px 13px 16px;
+  border-radius: 11px;
+  border: 1px solid #40566f;
+  background-color: #203149;
+  color: #f8fafc;
+  font-weight: 650;
+}
+.filters select:disabled { opacity: 1; color: #f8fafc; }
+
+/* Bandeau employé connecté : discret et lisible */
+#identite-employe, .employee-identity, .identite-employe {
+  border: 1px solid #344e65;
+  background: #16273a;
+  color: #e2e8f0;
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin: 14px 0 0;
+  font-weight: 750;
+  text-align: left;
+}
+
+/* Navigation entre les semaines */
+.week-selector {
+  display: grid;
+  grid-template-columns: 54px minmax(0,1fr) 54px;
+  gap: 12px;
+  align-items: center;
+  margin-top: 16px;
+}
+.week-selector button {
+  min-height: 52px;
+  border-radius: 12px;
+  border: 1px solid #40566f;
+  background: #192a40;
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+.week-selector button:hover { background: #293e59; }
+.week-selector input {
+  min-width: 0;
+  min-height: 52px;
+  border-radius: 12px;
+  border: 1px solid #40566f;
+  background: #192a40;
+  font-weight: 650;
+  padding-inline: 18px;
+}
+
+@media (max-width: 768px) {
+  .top-bar { min-height: 60px; padding: 8px 12px; }
+  .top-bar h1 { font-size: 1.1rem; }
+  .top-bar button { min-width: 42px; min-height: 42px; }
+  .filters { grid-template-columns: 1fr; padding: 14px; gap: 10px; margin-top: 14px; }
+  .filters select { min-height: 48px; }
+  .week-selector { grid-template-columns: 44px minmax(0,1fr) 44px; gap: 8px; }
+  .week-selector button, .week-selector input { min-height: 46px; }
+  .week-selector input { padding-inline: 8px; }
+  #identite-employe, .employee-identity, .identite-employe { text-align: center; }
+}
+@media print {
+  .filters, .week-selector, #identite-employe, .employee-identity, .identite-employe { display: none !important; }
+}
+
+/* ===== CORRECTIF RÉEL : labels + alignement du haut ===== */
+.filters { grid-template-columns: repeat(2,minmax(0,1fr)); align-items: end; }
+.filters > p { display: none !important; } /* ancien bandeau injecté par JS */
+.filters .filter-field { display:flex; flex-direction:column; gap:10px; min-width:0; }
+.filters .employee-field { order:1; }
+.filters .trade-field { order:2; }
+.filters .filter-field label { color:#aab9cb; font-size:.83rem; font-weight:800; letter-spacing:.045em; }
+.filters .filter-field select { width:100%; min-width:0; height:54px; margin:0; }
+.top-bar { position:relative; }
+.top-bar h1 { margin-right:52px; }
+.top-bar::after { content:'SEGOND CONSTRUCTION'; font-weight:900; font-size:.8rem; letter-spacing:.15em; color:#e2e8f0; white-space:nowrap; }
+@media(max-width:768px){
+  .filters { grid-template-columns:1fr; }
+  .top-bar::after { display:none; }
+  .top-bar h1 { margin-right:0; }
+  .filters .filter-field select { height:50px; }
+}
+@media print { .top-bar::after { display:none; } }
