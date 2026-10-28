@@ -4,6 +4,7 @@
 // ===== ADMINISTRATEURS =====
 export const ADMIN_UIDS = [
   "kvEitiN8j6YhKxUPEcu2gjciGYp2",// Laetitia
+  "tg9kcaPwVYfvTa5JELjELxzX7E32", // Info
   "7Q3LcHZsgeUQ2Rtwg1x8tg734o02" // Bet
 ];
 
