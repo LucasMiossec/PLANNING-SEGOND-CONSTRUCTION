@@ -586,24 +586,24 @@ window.addEventListener("afterprint", () => {
   document.body.classList.remove("print-week-active", "print-month-active", "print-bi-active");
 });
 
-document.addEventListener("DOMContentLoaded", () => {
-  const prevMonthBtn = document.getElementById("prevMonthBtn");
-  const nextMonthBtn = document.getElementById("nextMonthBtn");
+const prevMonthBtn = document.getElementById("prevMonthBtn");
+const nextMonthBtn = document.getElementById("nextMonthBtn");
 
-  if (prevMonthBtn) {
-    prevMonthBtn.onclick = () => {
-      moisAfficheDate.setMonth(moisAfficheDate.getMonth() - 1);
-      chargerRecapMensuelAdmin();
-    };
-  }
+if (prevMonthBtn) {
+  prevMonthBtn.addEventListener("click", () => {
+    moisAfficheDate.setDate(1);
+    moisAfficheDate.setMonth(moisAfficheDate.getMonth() - 1);
+    chargerRecapMensuelAdmin();
+  });
+}
 
-  if (nextMonthBtn) {
-    nextMonthBtn.onclick = () => {
-      moisAfficheDate.setMonth(moisAfficheDate.getMonth() + 1);
-      chargerRecapMensuelAdmin();
-    };
-  }
-});
+if (nextMonthBtn) {
+  nextMonthBtn.addEventListener("click", () => {
+    moisAfficheDate.setDate(1);
+    moisAfficheDate.setMonth(moisAfficheDate.getMonth() + 1);
+    chargerRecapMensuelAdmin();
+  });
+}
 
 // ================= ONGLETS =================
 document.querySelectorAll(".tab-btn").forEach(btn => {
