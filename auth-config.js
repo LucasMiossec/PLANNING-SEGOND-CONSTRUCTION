@@ -3,8 +3,8 @@
 
 // ===== ADMINISTRATEURS =====
 export const ADMIN_UIDS = [
-  "kvEitiN8j6YhKxUPEcu2gjciGYp2",// Laetitia
-  "tg9kcaPwVYfvTa5JELjELxzX7E32", // Info
+  "Jbi4YdWxsDOjUl1LgLtJhQPJxSJ3",// Laetitia
+  "b8AZY1wvNBRfJwx1qhCdJh6MhCo2", // Info
   "7Q3LcHZsgeUQ2Rtwg1x8tg734o02" // Bet
 ];
 
@@ -16,8 +16,8 @@ export const CADRE_UIDS = [
   "NHEzlte5Zsh0RKns1U36a8SaH8X2", // Julien
   "M10qkos6F8eNxMlIeLHGaaE4ieR2", // Cédric
   "ckMeGtCCAVWzs06G452yPdC08KH2", // Gérald
-  "kvEitiN8j6YhKxUPEcu2gjciGYp2",// Laetitia
-  "tg9kcaPwVYfvTa5JELjELxzX7E32", // Info
+  "Jbi4YdWxsDOjUl1LgLtJhQPJxSJ3",// Laetitia
+  "b8AZY1wvNBRfJwx1qhCdJh6MhCo2", // Info
   "7Q3LcHZsgeUQ2Rtwg1x8tg734o02" // Bet
 ];
 export const firebaseConfig = {
