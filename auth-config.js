@@ -16,6 +16,8 @@ export const CADRE_UIDS = [
   "NHEzlte5Zsh0RKns1U36a8SaH8X2", // Julien
   "M10qkos6F8eNxMlIeLHGaaE4ieR2", // Cédric
   "ckMeGtCCAVWzs06G452yPdC08KH2", // Gérald
+  "nNPjBqKwa3QPklhqRPwDXcB4rkY2", // André
+  "wWiw3xBo3nZZuWsSL5h1xS7ZjoR2", // Franck
   "Jbi4YdWxsDOjUl1LgLtJhQPJxSJ3",// Laetitia
   "b8AZY1wvNBRfJwx1qhCdJh6MhCo2", // Info
   "7Q3LcHZsgeUQ2Rtwg1x8tg734o02" // Bet
